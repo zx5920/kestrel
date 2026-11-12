@@ -3634,7 +3634,13 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request, from provider.Pro
 				continue
 			}
 			if !ok {
-				if done, err = s.nearCap.take(r.Context(), c.who()); err != nil {
+				// the wait is a known one (noteWait), and the Routing page
+				// says the turn is queued, not that routing goes on
+				// (tmr11235 on X: "路由中" until the turn before it ended)
+				stopQueue := s.showQueued(r.Context(), tr)
+				done, err = s.nearCap.take(r.Context(), c.who())
+				stopQueue()
+				if err != nil {
 					// the agent went away while it waited: nothing was sent
 					call.Status, call.Error = canceled(r.Context())
 					break
@@ -8713,6 +8719,11 @@ func refusedOptional(status int, msg, body []byte) []string {
 
 var unknownOptionalField = lazyre.New("(?i)\\b(?:unknown (?:name|field|parameter)|unsupported (?:parameter|field|property|argument)|unrecognized (?:request )?(?:argument|parameter)(?: supplied)?):?\\s*['\"\\x60]([a-z_]+)['\"\\x60]")
 var unquotedUnsupportedOptionalField = lazyre.New("(?i)\\bunsupported (?:parameter|field|property|argument):\\s*([a-z_]+)\\b")
+
+// chineseRefusedOptionalField is a relay refusing a field in Chinese:
+// 基元律动's "未知请求字段：prompt_cache_retention" (ldl123292 on X).
+var chineseRefusedOptionalField = lazyre.New("(?:未知|未识别|不支持|不允许|无效)(?:的)?(?:请求)?(?:字段|参数|属性)\\s*[:：]?\\s*['\"\\x60「“]?([a-z_]+)")
+
 var rejectedOptionalField = lazyre.New("(?i)(?:^|\\b(?:parameter|field|property|argument)\\s+)['\"\\x60]([a-z_]+)['\"\\x60]\\s+(?:is\\s+)?(?:unsupported|not supported)\\b")
 
 // leadingRejectedOptionalField is a message that starts with the field's
@@ -8767,6 +8778,11 @@ func unsupportedOptionalField(fault any, field string) bool {
 			return true
 		}
 		for _, match := range unquotedUnsupportedOptionalField.FindAllStringSubmatch(v, -1) {
+			if match[1] == field {
+				return true
+			}
+		}
+		for _, match := range chineseRefusedOptionalField.FindAllStringSubmatch(v, -1) {
 			if match[1] == field {
 				return true
 			}
