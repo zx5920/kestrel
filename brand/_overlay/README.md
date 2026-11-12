@@ -65,6 +65,5 @@ gateway paths keep working.
 MIT. Kestrel is a derivative of magpie, © 2026 yetone, and the original
 licence is kept unchanged in [LICENSE](LICENSE); [NOTICE](NOTICE) and
 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES) record the derivation and the other
-projects involved. The `docs/` and `site/` directories are upstream's own
-documentation, kept as they are for reference — they describe magpie, not a
-claim about who wrote this fork.
+projects involved. Upstream's documentation and marketing site are not part of
+this fork; both live in [yetone/magpie](https://github.com/yetone/magpie).

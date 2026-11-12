@@ -1,10 +1,11 @@
 # The brand layer
 
 The repository tracks upstream [yetone/magpie](https://github.com/yetone/magpie)'s
-files byte for byte. Nothing in the tree says "kestrel": every brand change
-lives here and is applied to a throwaway worktree at build time. That is why
-`git merge upstream/main` never conflicts — upstream edits files this fork has
-not touched.
+files byte for byte (except `docs/` and `site/`, which this fork does not
+ship). Nothing in the tree says "kestrel": every brand change lives here and is
+applied to a throwaway worktree at build time. That is why `git merge
+upstream/main` never conflicts on code — upstream edits files this fork has not
+touched.
 
 ```
 brand/
@@ -103,7 +104,12 @@ rename everywhere else.
 
 ## What the layer does not touch
 
-`site/`, `docs/`, `.github/` and `brand/` itself. The marketing site and the
-docs are upstream's; upstream's CI is left as it is (it will mostly fail in a
-fork — disable it under Actions if the red crosses bother you, ours is
-`follow-upstream.yml`). None of them end up in the binary.
+`.github/` and `brand/` itself. Upstream's CI is left as it is and disabled in
+this repo under Actions; ours is `follow-upstream.yml`.
+
+`site/` and `docs/` — upstream's marketing site and documentation — are not in
+this fork at all (2.4 MB and 69 MB, neither in the binary). They were removed
+in a commit, which makes every upstream edit there a modify/delete conflict;
+`sync.ps1` resolves those by keeping the files deleted and finishing the merge,
+and drops any file upstream adds back under those two paths. A conflict outside
+`docs/` and `site/` still stops the build, as it should.

@@ -99,7 +99,27 @@ try {
 		# something was committed that belongs in brand/ instead.
 		$merge = & git @ident merge --no-edit "upstream/$UpstreamBranch" 2>&1
 		if ($LASTEXITCODE -ne 0) {
-			Fail ("merging upstream/$UpstreamBranch conflicted — the fork must only commit brand/, sync.ps1 and .github/workflows:`n" + ($merge -join "`n"))
+			# docs/ and site/ are upstream's own documentation and website.
+			# They are removed from this fork, so an upstream edit to one of
+			# them is a modify/delete conflict: keep them deleted and finish
+			# the merge. Anything else is a real conflict and stops the build.
+			$unmerged = @(& git diff --name-only --diff-filter=U)
+			$outside = @($unmerged | Where-Object { $_ -and $_ -notmatch '^(docs|site)/' })
+			if (-not $unmerged -or $outside.Count -gt 0) {
+				Fail ("merging upstream/$UpstreamBranch conflicted — the fork must only commit brand/, sync.ps1 and .github/workflows:`n" + ($merge -join "`n"))
+			}
+			RunGit @("rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs", "site") | Out-Null
+			$finish = & git @ident commit --no-edit 2>&1
+			if ($LASTEXITCODE -ne 0) { Fail ("merging upstream/$UpstreamBranch stopped at a docs/site removal:`n" + ($finish -join "`n")) }
+			Write-Host "   upstream: $($unmerged.Count) docs/site changes dropped (removed from this fork)"
+		}
+		# a merge that succeeded can still have brought in new files under the
+		# removed directories; take them out too, so the tree stays as this fork is
+		if (@(& git ls-files -- docs site).Count -gt 0) {
+			RunGit @("rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs", "site") | Out-Null
+			$drop = & git @ident commit -q -m "repo: drop upstream's docs and site from this fork" 2>&1
+			if ($LASTEXITCODE -ne 0) { Fail ("dropping upstream docs/site failed:`n" + ($drop -join "`n")) }
+			Write-Host "   upstream: new docs/site files dropped (removed from this fork)"
 		}
 		if ($merge -match "Already up to date") { Write-Host "   upstream: nothing new" }
 	}
