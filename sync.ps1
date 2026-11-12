@@ -9,7 +9,7 @@
   under brand/ and is applied to a throwaway worktree (dist/src), so merging
   upstream never conflicts. This script is the whole loop:
 
-    1. git fetch upstream && merge --ff-only        (the fork stays pristine)
+    1. git fetch upstream && git merge upstream/main
     2. reset dist/src to the new HEAD, apply brand/ (rename + patches + overlay)
     3. build the Windows amd64 binary and its launcher
     4. write dist/update.json (version, url, size, sha256)
@@ -84,7 +84,15 @@ try {
 			Git @("remote", "add", "upstream", $UpstreamUrl) | Out-Null
 		}
 		Git @("fetch", "--quiet", "upstream", $UpstreamBranch) | Out-Null
-		Git @("merge", "--ff-only", "FETCH_HEAD") | Out-Null
+		# a merge, not a fast-forward: this fork's commits (brand/, sync.ps1,
+		# the workflow) are not upstream's descendants. It cannot conflict —
+		# the commits here never touch upstream's files — and if it does,
+		# something was committed that belongs in brand/ instead.
+		$merge = & git merge --no-edit "upstream/$UpstreamBranch" 2>&1
+		if ($LASTEXITCODE -ne 0) {
+			Fail ("merging upstream/$UpstreamBranch conflicted — the fork must only commit brand/, sync.ps1 and .github/workflows:`n" + ($merge -join "`n"))
+		}
+		if ($merge -match "Already up to date") { Write-Host "   upstream: nothing new" }
 	}
 
 	$head = (Git @("rev-parse", "HEAD")).Trim()
