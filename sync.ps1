@@ -48,7 +48,10 @@ param(
 	[switch]$Publish
 )
 
-$ErrorActionPreference = "Stop"
+# native commands write their chatter (git's "Previous HEAD position", go's
+# progress) to stderr, which "Stop" would turn into a fatal error; every one
+# below is checked by its exit code instead
+$ErrorActionPreference = "Continue"
 $root = $PSScriptRoot
 $work = Join-Path $root $Work
 
