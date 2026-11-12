@@ -65,15 +65,20 @@ with "a patch no longer applies". Nothing is built, nothing is published. Then:
    Upstream usually moved the code the patch edits; the change itself is still
    wanted.
 3. Resolve the markers in `dist/src` the way the patch intended, then
-   regenerate the patch so it is a clean diff against the new upstream text:
+   regenerate the patch so it is a clean diff against the new upstream text.
+   A three-way apply writes its result into the index, so reset first and
+   rebuild the pre-image — a plain `git diff` now would be a diff against the
+   final state, not against the renamed upstream:
 
    ```powershell
-   # in the throwaway tree, with the resolution in place
-   git -C dist/src diff --output=brand/patches/<name>.patch -- <file>
+   git -C dist/src checkout --detach --force HEAD
+   git -C dist/src clean -fdq
+   go run ./brand/apply -root dist/src -brand brand -rename-only
+   git -C dist/src add -A                      # index = renamed upstream text
+   # copy the resolved file back into dist/src/<path>
+   git -C dist/src diff --no-color --output=..\brand\patches\<name>.patch -- <path>
    ```
 
-   (The tree's index holds the renamed upstream text — that is the pre-image
-   the patch is written against.)
 4. `.\sync.ps1 -SkipSync -Test` and commit the regenerated patch.
 
 If a patch is no longer wanted at all — upstream did the same thing — delete
@@ -82,6 +87,17 @@ it. If the change is bigger than a patch can carry, move the file to
 
 Rule of thumb: a patch stays a patch while its diff is small. Past ~150 lines,
 or when the file is really this fork's, it belongs in the overlay.
+
+## The former name is a wire value
+
+The migration in `internal/agent/legacy.go` and `internal/appdir/former.go`
+looks for what Magpie wrote — `magpie` as a provider id, `magpie` as Claude's
+token, the `magpie` config folder. Those literals are spelled out (`formerID`,
+`FormerName`) and must survive the rename: they are the thing being migrated
+*from*. `formerID` lives in a patch, and the patches are applied after the
+rename and are never renamed themselves, so it stays; do not "fix" it to
+`kestrel`, and do not add the bare word to `protect` — that would stop the
+rename everywhere else.
 
 ## What the layer does not touch
 
