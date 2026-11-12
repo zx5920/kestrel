@@ -1,5 +1,5 @@
 diff --git a/internal/update/update.go b/internal/update/update.go
-index 5d6f41f..054344b 100644
+index ed350d3fe..905d62270 100644
 --- a/internal/update/update.go
 +++ b/internal/update/update.go
 @@ -1,12 +1,25 @@
@@ -71,7 +71,7 @@ index 5d6f41f..054344b 100644
 +	if f := strings.TrimSpace(os.Getenv("KESTREL_UPDATE_FEED")); f != "" {
  		return f
  	}
--	return Site + "/api/latest"
+-	return siteFeed
 +	if f := strings.TrimSpace(settings.Load().UpdateFeed); f != "" {
 +		return f
 +	}
@@ -93,13 +93,13 @@ index 5d6f41f..054344b 100644
  }
  
  // Release is one published version.
-@@ -139,6 +186,9 @@ func LatestEvery(ctx context.Context, lang string) (*Release, error) {
+@@ -141,6 +188,9 @@ func LatestEvery(ctx context.Context, lang string) (*Release, error) {
  }
  
  func latestAt(ctx context.Context, feed, lang string) (*Release, error) {
 +	if strings.TrimSpace(feed) == "" {
 +		return nil, ErrNoFeed
 +	}
- 	req, err := http.NewRequestWithContext(ctx, "GET", feed, nil)
- 	if err != nil {
- 		return nil, err
+ 	if !fallsBack(ctx) {
+ 		return latestFrom(ctx, feed, lang)
+ 	}
