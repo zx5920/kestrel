@@ -112,4 +112,9 @@ this fork at all (2.4 MB and 69 MB, neither in the binary). They were removed
 in a commit, which makes every upstream edit there a modify/delete conflict;
 `sync.ps1` resolves those by keeping the files deleted and finishing the merge,
 and drops any file upstream adds back under those two paths. A conflict outside
-`docs/` and `site/` still stops the build, as it should.
+`docs/`, `site/` and the README still stops the build, as it should.
+
+The repository's `README.md` is this fork's own too (`brand/_overlay/README.md`
+is the master copy, and the build overwrites it again). `README.zh-CN.md` was
+removed. An upstream edit to either is resolved the same way: the README stays
+this fork's, the Chinese one stays deleted.
