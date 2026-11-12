@@ -35,7 +35,7 @@ jobs:
   follow:
     runs-on: windows-latest
     steps:
-      - name: Check out the fork (full history: the version is the commit count)
+      - name: Check out the fork with full history (the version is the commit count)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
