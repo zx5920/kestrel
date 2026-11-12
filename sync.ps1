@@ -199,6 +199,9 @@ try {
 	$size = (Get-Item $exe).Length
 	$sha = (Get-FileHash $exe -Algorithm SHA256).Hash.ToLower()
 	$origin = (& git remote get-url origin) -replace '^git@github\.com:', 'https://github.com/' -replace '\.git$', ''
+	# gh cannot tell origin from upstream on its own (it once published to
+	# upstream's repo); every gh call names this fork explicitly
+	$repoSlug = if ($origin -match '^https://github\.com/([^/]+/[^/]+)$') { $matches[1] } else { "" }
 	$tag = "v$Version"
 	$notes = "built from upstream $short"
 	$assetUrl = if ($origin -match '^https://github\.com/[^/]+/[^/]+$') { "$origin/releases/download/$tag/kestrel-windows-amd64.exe" } else { "" }
@@ -225,15 +228,15 @@ try {
 
 	if ($Publish) {
 		if (-not (Get-Command gh -ErrorAction SilentlyContinue)) { Fail "-Publish needs the gh CLI" }
-		if (-not $assetUrl) { Fail "-Publish needs an origin remote on github.com (the asset url is what the feed points at)" }
+		if (-not $assetUrl -or -not $repoSlug) { Fail "-Publish needs an origin remote on github.com (the asset url is what the feed points at)" }
 		# a scheduled run with no upstream news lands on the same version
-		& gh release view $tag *> $null
+		& gh release view $tag --repo $repoSlug *> $null
 		if ($LASTEXITCODE -eq 0) {
 			Write-Host "release $tag already exists; nothing to publish"
 			return
 		}
 		Step "publish $tag"
-		& gh release create $tag $exe $feedPath --title "Kestrel $Version" --notes $notes
+		& gh release create $tag $exe $feedPath --repo $repoSlug --title "Kestrel $Version" --notes $notes
 		if ($LASTEXITCODE -ne 0) { Fail "gh release create failed" }
 		Write-Host "published: $pageUrl"
 	}
