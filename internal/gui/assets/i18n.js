@@ -2104,12 +2104,10 @@ const I18N = {
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and back to the first once that has room again.": "经 magpie 的请求由路由挑选账号；{agent} 直连时用它登录的账号，该账号用到 98% 时，magpie 把 {agent} 登录到下一个已勾选且有余量的账号，首选账号恢复后切回。",
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and keeps it there till that one is 98% used too.": "经 magpie 的请求由路由挑选账号；{agent} 直连时用它登录的账号，该账号用到 98% 时，magpie 把 {agent} 登录到下一个已勾选且有余量的账号，并一直用它，直到它也用到 98%。",
     "Switch {agent}'s account automatically": "自动切换 {agent} 的账号",
-    "magpie writes the next account's sign-in to Codex's own auth.json, as codex login does, and reads what is left where Codex's /status reads it. Sessions already open keep their account until they are restarted.": "magpie 把下一个账号的登录写进 Codex 自己的 auth.json，和 codex login 一样；剩余额度从 Codex 的 /status 读取的同一处读取。已经打开的会话继续用原来的账号，直到重新启动。",
-    "It changes which of your own accounts Codex is signed in to, and nothing else: the requests are the ones Codex makes.": "它只改变 Codex 登录的是你自己的哪一个账号，别的都不动：请求仍是 Codex 自己发出的那些。",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against OpenAI's terms.": "所以这和你手动切换账号是一样的。请只用你自己的账号：共享账号违反 OpenAI 的条款。",
-    "magpie writes the next account's sign-in where Claude Code keeps its own, as /login does, and reads what is left by running Claude Code's own /usage. Sessions already open keep their account until they are restarted.": "magpie 把下一个账号的登录写到 Claude Code 自己保存登录的地方，和 /login 一样；剩余额度通过运行 Claude Code 自己的 /usage 读取。已经打开的会话继续用原来的账号，直到重新启动。",
-    "Claude Code itself still sends every request, straight to Anthropic and unchanged; magpie sends none of them. An account with its own proxy keeps it.": "每个请求仍由 Claude Code 本身发出，直接发往 Anthropic，原样不改；magpie 一个都不发。设了自己代理的账号继续走它的代理。",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against Anthropic's terms.": "所以这和你手动切换账号是一样的。请只用你自己的账号：共享账号违反 Anthropic 的条款。",
+    "When the account runs low, magpie signs Codex in to your next account, as codex login does. Sessions already open keep their account until they are restarted.": "账号额度快用完时，magpie 把 Codex 登录到你的下一个账号，和 codex login 一样。已经打开的会话继续用原来的账号，直到重新启动。",
+    "Requests still come from Codex itself. Use only accounts that are yours: sharing one is against OpenAI's terms.": "请求仍由 Codex 自己发出。请只用你自己的账号：共享账号违反 OpenAI 的条款。",
+    "When the account runs low, magpie signs Claude Code in to your next account, as /login does. Sessions already open keep their account until they are restarted.": "账号额度快用完时，magpie 把 Claude Code 登录到你的下一个账号，和 /login 一样。已经打开的会话继续用原来的账号，直到重新启动。",
+    "Requests still go from Claude Code straight to Anthropic, unchanged. Use only accounts that are yours: sharing one is against Anthropic's terms.": "请求仍由 Claude Code 直接发往 Anthropic，原样不改。请只用你自己的账号：共享账号违反 Anthropic 的条款。",
     "Always on while magpie only switches {agent}'s sign-in": "{agent} 只切换登录时始终开启",
     "{agent}'s requests go through magpie, which sends each one to an account with room; its own sign-in stays where you put it.": "{agent} 的请求经过 magpie，每个请求都发给有额度的账号；{agent} 自己的登录保持你选的账号不变。",
     "When the account {agent} is signed in to is used up, magpie signs it in to the next ticked account with room.": "{agent} 登录的账号用完时，magpie 把它登录到下一个已勾选且有额度的账号。",
@@ -4883,6 +4881,7 @@ const I18N = {
     "MothX reads its settings at start-up — restart open mothx sessions to use this.": "MothX 启动时读取设置，需重启已打开的 mothx 会话才会生效。",
     "Zoo Code reads magpie's profile when it starts — run Developer: Reload Window in VS Code to use this.": "Zoo Code 启动时读取 magpie 的配置档，需在 VS Code 中运行 Developer: Reload Window 才会生效。",
     "jcode reads its settings at start-up — restart open jcode sessions to use this.": "jcode 启动时读取设置，需重启已打开的 jcode 会话才会生效。",
+    "Vibe reads its settings at start-up — restart open vibe sessions to use this.": "Vibe 启动时读取设置，需重启已打开的 vibe 会话才会生效。",
     "OpenClaw takes this up without a restart. A chat that already has a model keeps it: send /model default in that chat to move it onto this one.": "OpenClaw 无需重启即可生效。已在进行的对话会保留原来的模型：在该对话中发送 /model default 即可换到这个模型。",
     "Magpie is a custom provider in Grok App's Settings › Account. A chat can pick magpie's models in its model picker, and Grok App stays on its current route until you press Use on magpie there.": "Magpie 是 Grok App「设置 › 账户」里的一个自定义供应商。对话可以在模型选择器里选 magpie 的模型；在你于该处对 magpie 点「使用」之前，Grok App 保持当前路线。",
     "MiniMax Code's desktop app keeps the model last picked in it: restart the app, then pick a magpie model once in its model menu (under magpie). Open mcode sessions need a restart too.": "MiniMax Code 桌面版会沿用它自己上次选的模型：请重启桌面版，再在它的模型菜单里（magpie 下）选一次 magpie 的模型。已打开的 mcode 会话也需重启。",
@@ -7221,12 +7220,10 @@ const I18N = {
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and back to the first once that has room again.": "經 magpie 的請求由路由挑選帳號；{agent} 直連時用它登入的帳號，該帳號用到 98% 時，magpie 把 {agent} 登入到下一個已勾選且有餘量的帳號，首選帳號恢復後切回。",
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and keeps it there till that one is 98% used too.": "經 magpie 的請求由路由挑選帳號；{agent} 直連時用它登入的帳號，該帳號用到 98% 時，magpie 把 {agent} 登入到下一個已勾選且有餘量的帳號，並一直用它，直到它也用到 98%。",
     "Switch {agent}'s account automatically": "自動切換 {agent} 的帳號",
-    "magpie writes the next account's sign-in to Codex's own auth.json, as codex login does, and reads what is left where Codex's /status reads it. Sessions already open keep their account until they are restarted.": "magpie 把下一個帳號的登入寫進 Codex 自己的 auth.json，和 codex login 一樣；剩餘額度從 Codex 的 /status 讀取的同一處讀取。已經開啟的工作階段繼續用原來的帳號，直到重新啟動。",
-    "It changes which of your own accounts Codex is signed in to, and nothing else: the requests are the ones Codex makes.": "它只改變 Codex 登入的是你自己的哪一個帳號，其他都不動：請求仍是 Codex 自己發出的那些。",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against OpenAI's terms.": "所以這和你手動切換帳號是一樣的。請只用你自己的帳號：共用帳號違反 OpenAI 的條款。",
-    "magpie writes the next account's sign-in where Claude Code keeps its own, as /login does, and reads what is left by running Claude Code's own /usage. Sessions already open keep their account until they are restarted.": "magpie 把下一個帳號的登入寫到 Claude Code 自己保存登入的地方，和 /login 一樣；剩餘額度透過執行 Claude Code 自己的 /usage 讀取。已經開啟的工作階段繼續用原來的帳號，直到重新啟動。",
-    "Claude Code itself still sends every request, straight to Anthropic and unchanged; magpie sends none of them. An account with its own proxy keeps it.": "每個請求仍由 Claude Code 本身發出，直接送往 Anthropic，原封不動；magpie 一個都不送。設了自己代理的帳號繼續走它的代理。",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against Anthropic's terms.": "所以這和你手動切換帳號是一樣的。請只用你自己的帳號：共用帳號違反 Anthropic 的條款。",
+    "When the account runs low, magpie signs Codex in to your next account, as codex login does. Sessions already open keep their account until they are restarted.": "帳號額度快用完時，magpie 會把 Codex 登入到你的下一個帳號，和 codex login 一樣。已經開啟的工作階段會繼續使用原來的帳號，直到重新啟動。",
+    "Requests still come from Codex itself. Use only accounts that are yours: sharing one is against OpenAI's terms.": "請求仍由 Codex 自己發出。請只使用你自己的帳號：共用帳號違反 OpenAI 的條款。",
+    "When the account runs low, magpie signs Claude Code in to your next account, as /login does. Sessions already open keep their account until they are restarted.": "帳號額度快用完時，magpie 會把 Claude Code 登入到你的下一個帳號，和 /login 一樣。已經開啟的工作階段會繼續使用原來的帳號，直到重新啟動。",
+    "Requests still go from Claude Code straight to Anthropic, unchanged. Use only accounts that are yours: sharing one is against Anthropic's terms.": "請求仍由 Claude Code 直接送往 Anthropic，原樣不改。請只使用你自己的帳號：共用帳號違反 Anthropic 的條款。",
     "Always on while magpie only switches {agent}'s sign-in": "{agent} 只切換登入時始終開啟",
     "{agent}'s requests go through magpie, which sends each one to an account with room; its own sign-in stays where you put it.": "{agent} 的請求經過 magpie，每個請求都發給有額度的帳號；{agent} 自己的登入保持你選的帳號不變。",
     "When the account {agent} is signed in to is used up, magpie signs it in to the next ticked account with room.": "{agent} 登入的帳號用完時，magpie 把它登入到下一個已勾選且有額度的帳號。",
@@ -9995,6 +9992,7 @@ const I18N = {
     "MothX reads its settings at start-up — restart open mothx sessions to use this.": "MothX 啟動時讀取設定，需重啟已打開的 mothx 會話才會生效。",
     "Zoo Code reads magpie's profile when it starts — run Developer: Reload Window in VS Code to use this.": "Zoo Code 啟動時讀取 magpie 的設定檔，需在 VS Code 中執行 Developer: Reload Window 才會生效。",
     "jcode reads its settings at start-up — restart open jcode sessions to use this.": "jcode 啟動時讀取設定，需重啟已打開的 jcode 會話才會生效。",
+    "Vibe reads its settings at start-up — restart open vibe sessions to use this.": "Vibe 啟動時讀取設定，需重啟已打開的 vibe 會話才會生效。",
     "OpenClaw takes this up without a restart. A chat that already has a model keeps it: send /model default in that chat to move it onto this one.": "OpenClaw 無需重啟即可生效。已在進行的對話會保留原來的模型：在該對話中傳送 /model default 即可換到這個模型。",
     "Magpie is a custom provider in Grok App's Settings › Account. A chat can pick magpie's models in its model picker, and Grok App stays on its current route until you press Use on magpie there.": "Magpie 是 Grok App「設定 › 帳戶」裡的一個自訂供應商。對話可以在模型選擇器裡選 magpie 的模型；在你於該處對 magpie 按「使用」之前，Grok App 維持目前的路線。",
     "MiniMax Code's desktop app keeps the model last picked in it: restart the app, then pick a magpie model once in its model menu (under magpie). Open mcode sessions need a restart too.": "MiniMax Code 桌面版會沿用它自己上次選的模型：請重啟桌面版，再在它的模型選單裡（magpie 下）選一次 magpie 的模型。已打開的 mcode 會話也需重啟。",
@@ -12314,12 +12312,10 @@ const I18N = {
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and back to the first once that has room again.": "magpie 経由のリクエストはルーティングがアカウントを選びます。{agent} 単体ではサインイン中のアカウントを使い、そのアカウントが 98% 使用されると magpie が残量のある次のチェック済みアカウントに切り替え、最初のアカウントに残量が戻ると元に戻します。",
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and keeps it there till that one is 98% used too.": "magpie 経由のリクエストはルーティングがアカウントを選びます。{agent} 単体ではサインイン中のアカウントを使い、そのアカウントが 98% 使用されると magpie が残量のある次のチェック済みアカウントに切り替え、そのアカウントも 98% 使用されるまでそのまま使います。",
     "Switch {agent}'s account automatically": "{agent} のアカウントを自動で切り替える",
-    "magpie writes the next account's sign-in to Codex's own auth.json, as codex login does, and reads what is left where Codex's /status reads it. Sessions already open keep their account until they are restarted.": "magpie は次のアカウントのサインインを Codex 自身の auth.json に書き込みます（codex login と同じです）。残りは Codex の /status が読むのと同じところから読みます。開いているセッションは再起動するまで元のアカウントのままです。",
-    "It changes which of your own accounts Codex is signed in to, and nothing else: the requests are the ones Codex makes.": "変わるのは Codex がサインインしている自分のアカウントだけで、ほかは何も変えません。リクエストは Codex 自身が送るものです。",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against OpenAI's terms.": "つまり手でアカウントを切り替えるのと同じです。自分のアカウントだけを使ってください。アカウントの共有は OpenAI の規約に反します。",
-    "magpie writes the next account's sign-in where Claude Code keeps its own, as /login does, and reads what is left by running Claude Code's own /usage. Sessions already open keep their account until they are restarted.": "magpie は次のアカウントのサインインを Claude Code が自分のサインインを保存する場所に書き込みます（/login と同じです）。残りは Claude Code 自身の /usage を実行して読みます。開いているセッションは再起動するまで元のアカウントのままです。",
-    "Claude Code itself still sends every request, straight to Anthropic and unchanged; magpie sends none of them. An account with its own proxy keeps it.": "リクエストはすべて Claude Code 自身が Anthropic へ直接、そのまま送ります。magpie は一つも送りません。独自のプロキシを持つアカウントはそのプロキシを使い続けます。",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against Anthropic's terms.": "つまり手でアカウントを切り替えるのと同じです。自分のアカウントだけを使ってください。アカウントの共有は Anthropic の規約に反します。",
+    "When the account runs low, magpie signs Codex in to your next account, as codex login does. Sessions already open keep their account until they are restarted.": "アカウントの残りが少なくなると、magpie は codex login と同じように Codex を次のアカウントにサインインさせます。すでに開いているセッションは、再起動するまで元のアカウントを使い続けます。",
+    "Requests still come from Codex itself. Use only accounts that are yours: sharing one is against OpenAI's terms.": "リクエストはこれまでどおり Codex 自身が送ります。ご自身のアカウントだけを使ってください。アカウントの共有は OpenAI の規約に反します。",
+    "When the account runs low, magpie signs Claude Code in to your next account, as /login does. Sessions already open keep their account until they are restarted.": "アカウントの残りが少なくなると、magpie は /login と同じように Claude Code を次のアカウントにサインインさせます。すでに開いているセッションは、再起動するまで元のアカウントを使い続けます。",
+    "Requests still go from Claude Code straight to Anthropic, unchanged. Use only accounts that are yours: sharing one is against Anthropic's terms.": "リクエストはこれまでどおり Claude Code から Anthropic へそのまま直接送られます。ご自身のアカウントだけを使ってください。アカウントの共有は Anthropic の規約に反します。",
     "Always on while magpie only switches {agent}'s sign-in": "{agent} のサインインだけを切り替えるときは常にオン",
     "{agent}'s requests go through magpie, which sends each one to an account with room; its own sign-in stays where you put it.": "{agent} のリクエストは magpie を経由し、各リクエストは残量のあるアカウントに送られます。そのサインインは選んだアカウントのままです。",
     "When the account {agent} is signed in to is used up, magpie signs it in to the next ticked account with room.": "{agent} がサインインしているアカウントを使い切ると、magpie は残量のある次のチェック済みアカウントにサインインし直します。",
@@ -15109,6 +15105,7 @@ const I18N = {
     "MothX reads its settings at start-up — restart open mothx sessions to use this.": "MothX は起動時に設定を読み込みます。反映するには開いている mothx セッションを再起動してください。",
     "Zoo Code reads magpie's profile when it starts — run Developer: Reload Window in VS Code to use this.": "Zoo Code は起動時に magpie のプロファイルを読み込みます。反映するには VS Code で Developer: Reload Window を実行してください。",
     "jcode reads its settings at start-up — restart open jcode sessions to use this.": "jcode は起動時に設定を読み込みます。反映するには開いている jcode セッションを再起動してください。",
+    "Vibe reads its settings at start-up — restart open vibe sessions to use this.": "Vibe は起動時に設定を読み込みます。反映するには開いている vibe セッションを再起動してください。",
     "OpenClaw takes this up without a restart. A chat that already has a model keeps it: send /model default in that chat to move it onto this one.": "OpenClaw は再起動なしで反映します。すでにモデルが決まっている会話はそのままです。その会話で /model default を送るとこのモデルに切り替わります。",
     "Magpie is a custom provider in Grok App's Settings › Account. A chat can pick magpie's models in its model picker, and Grok App stays on its current route until you press Use on magpie there.": "Magpie は Grok App の「設定 › アカウント」にあるカスタムプロバイダーです。チャットはモデル選択から magpie のモデルを選べます。そこで magpie の「使う」を押すまで、Grok App は今のルートのままです。",
     "MiniMax Code's desktop app keeps the model last picked in it: restart the app, then pick a magpie model once in its model menu (under magpie). Open mcode sessions need a restart too.": "MiniMax Code のデスクトップアプリは、アプリ内で最後に選んだモデルを使い続けます。アプリを再起動し、モデルメニュー（magpie の下）で magpie のモデルを一度選んでください。開いている mcode セッションも再起動が必要です。",
@@ -17438,12 +17435,10 @@ const I18N = {
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and back to the first once that has room again.": "Die Weiterleitung wählt für jede Anfrage über magpie das Konto; {agent} selbst nutzt das Konto, bei dem es angemeldet ist; magpie meldet es beim nächsten angehakten Konto mit freiem Kontingent an, sobald das aktuelle zu 98 % verbraucht ist, und wieder beim ersten, sobald dort wieder Kontingent frei ist.",
     "Routing picks the account for each request through magpie; {agent} on its own uses the one it is signed in to, which magpie moves to the next ticked account with room once it is 98% used, and keeps it there till that one is 98% used too.": "Die Weiterleitung wählt für jede Anfrage über magpie das Konto; {agent} selbst nutzt das Konto, bei dem es angemeldet ist; magpie meldet es beim nächsten angehakten Konto mit freiem Kontingent an, sobald das aktuelle zu 98 % verbraucht ist, und bleibt dort, bis auch dieses zu 98 % verbraucht ist.",
     "Switch {agent}'s account automatically": "{agent}-Konto automatisch wechseln",
-    "magpie writes the next account's sign-in to Codex's own auth.json, as codex login does, and reads what is left where Codex's /status reads it. Sessions already open keep their account until they are restarted.": "magpie schreibt die Anmeldung des nächsten Kontos in Codex' eigene auth.json, wie codex login es tut, und liest das Verbleibende dort, wo Codex' /status es liest. Bereits offene Sitzungen behalten ihr Konto, bis sie neu gestartet werden.",
-    "It changes which of your own accounts Codex is signed in to, and nothing else: the requests are the ones Codex makes.": "Es ändert nur, bei welchem deiner eigenen Konten Codex angemeldet ist, sonst nichts: Die Anfragen sind die, die Codex stellt.",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against OpenAI's terms.": "Es ist also dasselbe wie ein Kontowechsel von Hand. Nutze nur Konten, die dir gehören: Ein Konto zu teilen verstößt gegen die Bedingungen von OpenAI.",
-    "magpie writes the next account's sign-in where Claude Code keeps its own, as /login does, and reads what is left by running Claude Code's own /usage. Sessions already open keep their account until they are restarted.": "magpie schreibt die Anmeldung des nächsten Kontos dorthin, wo Claude Code seine eigene speichert, wie /login es tut, und liest das Verbleibende, indem es Claude Codes eigenes /usage ausführt. Bereits offene Sitzungen behalten ihr Konto, bis sie neu gestartet werden.",
-    "Claude Code itself still sends every request, straight to Anthropic and unchanged; magpie sends none of them. An account with its own proxy keeps it.": "Claude Code selbst sendet weiterhin jede Anfrage, direkt und unverändert an Anthropic; magpie sendet keine davon. Ein Konto mit eigenem Proxy behält ihn.",
-    "So it is the same as switching accounts by hand. Use only accounts that are yours: sharing one is against Anthropic's terms.": "Es ist also dasselbe wie ein Kontowechsel von Hand. Nutze nur Konten, die dir gehören: Ein Konto zu teilen verstößt gegen die Bedingungen von Anthropic.",
+    "When the account runs low, magpie signs Codex in to your next account, as codex login does. Sessions already open keep their account until they are restarted.": "Wird das Kontingent knapp, meldet magpie Codex an Ihrem nächsten Konto an, wie codex login. Bereits geöffnete Sitzungen behalten ihr Konto bis zum Neustart.",
+    "Requests still come from Codex itself. Use only accounts that are yours: sharing one is against OpenAI's terms.": "Die Anfragen sendet weiterhin Codex selbst. Verwenden Sie nur eigene Konten: Das Teilen eines Kontos verstößt gegen die Bedingungen von OpenAI.",
+    "When the account runs low, magpie signs Claude Code in to your next account, as /login does. Sessions already open keep their account until they are restarted.": "Wird das Kontingent knapp, meldet magpie Claude Code an Ihrem nächsten Konto an, wie /login. Bereits geöffnete Sitzungen behalten ihr Konto bis zum Neustart.",
+    "Requests still go from Claude Code straight to Anthropic, unchanged. Use only accounts that are yours: sharing one is against Anthropic's terms.": "Die Anfragen gehen weiterhin von Claude Code direkt und unverändert an Anthropic. Verwenden Sie nur eigene Konten: Das Teilen eines Kontos verstößt gegen die Bedingungen von Anthropic.",
     "Always on while magpie only switches {agent}'s sign-in": "Immer an, solange magpie nur die Anmeldung von {agent} wechselt",
     "{agent}'s requests go through magpie, which sends each one to an account with room; its own sign-in stays where you put it.": "Die Anfragen von {agent} laufen über magpie, das jede an ein Konto mit Kontingent schickt; die eigene Anmeldung bleibt, wo du sie gesetzt hast.",
     "When the account {agent} is signed in to is used up, magpie signs it in to the next ticked account with room.": "Ist das Konto, bei dem {agent} angemeldet ist, aufgebraucht, meldet magpie es beim nächsten angehakten Konto mit Kontingent an.",
@@ -20223,6 +20218,7 @@ const I18N = {
     "MothX reads its settings at start-up — restart open mothx sessions to use this.": "MothX liest seine Einstellungen beim Start – offene mothx-Sitzungen neu starten, damit es gilt.",
     "Zoo Code reads magpie's profile when it starts — run Developer: Reload Window in VS Code to use this.": "Zoo Code liest das Profil von magpie beim Start – in VS Code Developer: Reload Window ausführen, damit es gilt.",
     "jcode reads its settings at start-up — restart open jcode sessions to use this.": "jcode liest seine Einstellungen beim Start – offene jcode-Sitzungen neu starten, damit es gilt.",
+    "Vibe reads its settings at start-up — restart open vibe sessions to use this.": "Vibe liest seine Einstellungen beim Start – offene vibe-Sitzungen neu starten, damit es gilt.",
     "OpenClaw takes this up without a restart. A chat that already has a model keeps it: send /model default in that chat to move it onto this one.": "OpenClaw übernimmt das ohne Neustart. Ein Chat, der schon ein Modell hat, behält es: Sende in diesem Chat /model default, um ihn auf dieses umzustellen.",
     "Magpie is a custom provider in Grok App's Settings › Account. A chat can pick magpie's models in its model picker, and Grok App stays on its current route until you press Use on magpie there.": "Magpie ist ein eigener Anbieter unter Einstellungen › Konto in Grok App. Ein Chat kann magpies Modelle in seiner Modellauswahl wählen, und Grok App bleibt auf seiner aktuellen Route, bis du dort bei magpie auf Verwenden drückst.",
     "MiniMax Code's desktop app keeps the model last picked in it: restart the app, then pick a magpie model once in its model menu (under magpie). Open mcode sessions need a restart too.": "Die Desktop-App von MiniMax Code behält das zuletzt in ihr gewählte Modell: App neu starten und dann einmal in ihrem Modellmenü (unter magpie) ein magpie-Modell wählen. Offene mcode-Sitzungen müssen ebenfalls neu gestartet werden.",
@@ -20519,6 +20515,7 @@ const NOTICES = [
   "MothX reads its settings at start-up — restart open mothx sessions to use this.",
   "Zoo Code reads magpie's profile when it starts — run Developer: Reload Window in VS Code to use this.",
   "jcode reads its settings at start-up — restart open jcode sessions to use this.",
+  "Vibe reads its settings at start-up — restart open vibe sessions to use this.",
   "OpenClaw takes this up without a restart. A chat that already has a model keeps it: send /model default in that chat to move it onto this one.",
   "Magpie is a custom provider in Grok App's Settings › Account. A chat can pick magpie's models in its model picker, and Grok App stays on its current route until you press Use on magpie there.",
   "MiniMax Code's desktop app keeps the model last picked in it: restart the app, then pick a magpie model once in its model menu (under magpie). Open mcode sessions need a restart too.",
@@ -20646,13 +20643,14 @@ function sysLocale(sys) {
 
 // intlLang is the tag every date, time and number the GUI shows is
 // formatted in: the GUI's language, never the system's alone. English takes
-// the system's own English (en-GB keeps its day-month order) and is plain
+// the system's own English (en-GB keeps its day-month order; so does the
+// region a Mac is set to, boot.js "locale", over the webview's en-US) and is plain
 // "en" on a system in another language, so a Chinese Mac set to English
 // reads "Oct 11", not "10月11日" (#1843). Never format with no locale, [] or
 // undefined: those follow the system, not the language picked here.
 const LANG_TAGS = { zh: "zh-CN", "zh-TW": "zh-TW", ja: "ja-JP", de: "de-DE" };
 function intlLang() {
-  const sys = navigator.language || "", hc = window.bootPrefs?.hourCycle;
+  const sys = window.bootPrefs?.locale || navigator.language || "", hc = window.bootPrefs?.hourCycle;
   const base = LANG_TAGS[locale] || (/^en(-|$)/i.test(sys) ? sys : "en");
   return hc ? base.replace(/-u-.*/, "") + "-u-hc-" + hc : base;
 }

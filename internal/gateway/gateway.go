@@ -3890,7 +3890,7 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request, from provider.Pro
 				fixed = ""
 			}
 		}
-		if fixed == "" && ruled == "" && effort == "" && agentPick != "" && c.p.Thinks(c.model) {
+		if fixed == "" && ruled == "" && effort == "" && agentPick != "" && !agyLevelAsked(agent, from, attemptBody) && c.p.Thinks(c.model) {
 			// the effort picked in magpie for an agent whose config can't
 			// carry one (Cursor Private Inference, #1003), in place of the
 			// level it sent, on a model that reasons; a member fixed at
@@ -6605,6 +6605,7 @@ func (s *Server) passthrough(w http.ResponseWriter, r *http.Request, p provider.
 			// an earlier turn's reasoning_content, which Mistral turns
 			// away, as the thinking part it takes (#494)
 			body = mistralThinking(body)
+			body = mistralImageLimit(body)
 		}
 		if isKimi(p, proto) {
 			// another vendor's reasoning_details (MiMo's, with a stream's
@@ -8164,6 +8165,7 @@ func (s *Server) forwardTranslated(ctx context.Context, p provider.Provider, to 
 			// it; every follow-up of a Codex tool loop was refused, 422
 			// extra_forbidden (#4906)
 			body = mistralThinking(body)
+			body = mistralImageLimit(body)
 		}
 		if to == provider.Responses && !keepsLoneNone(p) {
 			// the "none" buildResponses keeps for a request that turned
