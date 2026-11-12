@@ -1,0 +1,14 @@
+diff --git a/internal/gui/assets/whatsnew.js b/internal/gui/assets/whatsnew.js
+index 57606c4..c27a6d5 100644
+--- a/internal/gui/assets/whatsnew.js
++++ b/internal/gui/assets/whatsnew.js
+@@ -177,7 +177,8 @@ function inlineMD(e, s) {
+     else if (m[2] !== undefined) e.append(el("code", "", m[2]));
+     else if (m[3] !== undefined) e.append(noteLink(m[3], m[4]));
+     else if (m[5] !== undefined) e.append(noteLink(m[5], m[5]));
+-    else e.append(m[6], noteLink("#" + m[7], ISSUES + m[7]));
++    else if (ISSUES) e.append(m[6], noteLink("#" + m[7], ISSUES + m[7]));
++    else e.append(m[6], "#" + m[7]);
+     at = re.lastIndex;
+   }
+   if (at < s.length) e.append(s.slice(at));

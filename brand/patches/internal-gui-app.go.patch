@@ -1,0 +1,72 @@
+diff --git a/internal/gui/app.go b/internal/gui/app.go
+index 7e82b60..f376976 100644
+--- a/internal/gui/app.go
++++ b/internal/gui/app.go
+@@ -209,7 +209,7 @@ func (h *host) ChooseFolder(title string) (string, error) {
+ 
+ // panelTitle names the panel for Hyprland's rule, which places it, and
+ // for niri, which finds it by it (the main window is "kestrel")
+-const panelTitle = "kestrel panel"
++const panelTitle = "Kestrel panel"
+ 
+ // FitPanel grows or shrinks the panel to its content and keeps it anchored
+ // under the tray icon; a shown panel glides there when g says how. height
+@@ -429,7 +429,7 @@ func Run(version string, showMain bool, link string) error {
+ 		// second launch); it hands its arguments to the running one and quits.
+ 		// The Mac sends the link to the running app itself.
+ 		SingleInstance: singleInstance(h),
+-		Name:           "kestrel",
++		Name:           "Kestrel",
+ 		Description:    "one place to pick every agent's model",
+ 		Icon:           appIconFor(),
+ 		Assets:         application.AssetOptions{Handler: ownWindow(handler)},
+@@ -485,14 +485,14 @@ func Run(version string, showMain bool, link string) error {
+ 	}
+ 	var appQuit *application.MenuItem // the Mac's app menu's Quit
+ 	// Wails' default Learn More replaces the current window with wails.io.
+-	// Keep the native menus, but open kestrel's help in the system browser.
+-	// macOS only: it is the one that shows a menu bar unasked; on Linux a
+-	// set menu becomes a menu bar in every window, the panel's too.
++	// Keep the native menus, but empty the Help menu: this build shows no
++	// external link anywhere. macOS only: it is the one that shows a menu
++	// bar unasked; on Linux a set menu becomes a menu bar in every window,
++	// the panel's too.
+ 	if runtime.GOOS == "darwin" {
+ 		appMenu := application.DefaultApplicationMenu()
+ 		help := appMenu.FindByRole(application.HelpMenu).GetSubmenu()
+ 		help.Clear()
+-		help.Add("Learn More").OnClick(func(*application.Context) { _ = h.OpenURL("https://usemagpie.ai") })
+ 		// Command-Q asks first while agents are connected (quitask.go). The
+ 		// role's item sends terminate:, which logging out and shutting down
+ 		// send too, so it is replaced rather than the app's ShouldQuit set
+@@ -619,10 +619,10 @@ func Run(version string, showMain bool, link string) error {
+ 	if runtime.GOOS == "linux" {
+ 		// set before the tray starts, it is the item's id too, which
+ 		// Omarchy's bar pins it by (Wails calls it "Wails" otherwise)
+-		h.tray.SetLabel("kestrel")
++		h.tray.SetLabel("Kestrel")
+ 		go dropTrayName()
+ 	}
+-	h.tray.SetTooltip("kestrel")
++	h.tray.SetTooltip("Kestrel")
+ 	if icon, template := trayIconFor(runtime.GOOS, traySchemeLight()); template {
+ 		h.tray.SetTemplateIcon(icon)
+ 	} else {
+@@ -782,7 +782,7 @@ func singleInstance(h *host) *application.SingleInstanceOptions {
+ 	}
+ 	sum := sha256.Sum256([]byte(settings.Dir()))
+ 	return &application.SingleInstanceOptions{
+-		UniqueID: "ai.usemagpie.app.i" + hex.EncodeToString(sum[:6]),
++		UniqueID: "ai.usekestrel.app.i" + hex.EncodeToString(sum[:6]),
+ 		OnSecondInstanceLaunch: func(d application.SecondInstanceData) {
+ 			args := d.Args
+ 			if len(args) > 0 {
+@@ -853,7 +853,7 @@ func (h *host) setBird(b []byte) {
+ func panelOptions(goos, theme string) application.WebviewWindowOptions {
+ 	o := application.WebviewWindowOptions{
+ 		Name:            "panel",
+-		Title:           "kestrel",
++		Title:           "Kestrel",
+ 		URL:             "/?mode=panel" + theme,
+ 		Width:           panelWidth,
+ 		Height:          520,

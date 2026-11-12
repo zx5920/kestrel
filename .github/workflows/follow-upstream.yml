@@ -1,0 +1,68 @@
+# Follow upstream yetone/magpie: sync, re-apply the Kestrel brand layer, build
+# the Windows amd64 binary, publish it with update.json.
+#
+# One-time setup, on the fork:
+#   1. create the repository from this copy (git remote add origin …; push)
+#   2. Settings -> Actions -> General -> Workflow permissions: Read and write
+#   3. nothing else — GITHUB_TOKEN is enough, and the release url the binary
+#      bakes in is derived from the origin remote
+#
+# The feed is https://github.com/<owner>/<repo>/releases/latest/download/update.json,
+# i.e. whatever release this workflow published last. That is what the app's
+# update switch reads; it ships off, and `kestrel update auto on` turns it on.
+name: follow-upstream
+
+on:
+  schedule:
+    # every day at 03:17 UTC (11:17 Asia/Shanghai)
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "brand/**"
+      - "sync.ps1"
+      - ".github/workflows/follow-upstream.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: follow-upstream
+  cancel-in-progress: false
+
+jobs:
+  follow:
+    runs-on: windows-latest
+    steps:
+      - name: Check out the fork (full history: the version is the commit count)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # sync.ps1 does the four steps: fetch/merge upstream, apply brand/,
+      # build, write update.json. -Test compiles the branded tree and runs
+      # the migration tests before anything is published; -Publish creates
+      # the release, and does nothing when that version is already out
+      # (a scheduled run with no upstream news changes nothing).
+      - name: Sync, brand, build, publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./sync.ps1 -Test -Publish
+
+      - name: Keep the built binary and feed for inspection
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kestrel-windows-amd64
+          path: |
+            dist/kestrel-windows-amd64.exe
+            dist/update.json
+          retention-days: 14

@@ -1,0 +1,138 @@
+diff --git a/internal/gui/assets/app.js b/internal/gui/assets/app.js
+index 9b874ee..7979020 100644
+--- a/internal/gui/assets/app.js
++++ b/internal/gui/assets/app.js
+@@ -4348,8 +4348,16 @@ for (const k of "pointerdown keydown input wheel".split(" ")) addEventListener(k
+ // renderUpdateBadge shows the header's Update pill once a newer kestrel is
+ // downloaded or out; Settings or its × keeps it away.
+ 
++// updatesWanted is whether this build checks updates at all. It ships with
++// the switch off: no pill, no version row's Check, no notes and no request
++// to a feed until settings.autoUpdate is on (kestrel update auto on, with a
++// feed configured).
++const updatesWanted = () => !!state?.settings?.autoUpdate;
++
+ async function renderUpdateBadge() {
+   const b = $("#update"), label = b.querySelector("span");
++  // updates are off unless the switch is on: no pill, and nothing is asked
++  if (!updatesWanted()) { b.hidden = true; return; }
+   const u = await api(updatePath("update")).catch(() => null);
+   if (servedAnew(u)) return;
+   if (u) updateLast = u, u.at = Date.now();
+@@ -4505,7 +4513,9 @@ function updateStuck(u) {
+ // ---------- what's new ----------
+ // After an update the window (or kestrel web) shows each release's changes
+ // since the one last run, once; Settings' version row opens it again.
+-const ISSUES = "https://github.com/kestrel-app/kestrel/issues/";
++// no issue tracker is linked: this build opens no external page, so a
++// release note's "#123" is left as text
++const ISSUES = "";
+ let whatsNewAsked = false;
+ // cliBehindOnce: the terminal's kestrel is a copy, not the installer's
+ // link, so it can't follow updates (#531); advice once per load, window only
+@@ -4540,7 +4550,7 @@ function cliBehindOnce() {
+ let configBlockedAsked = false;
+ const configBlockedAsk = (p) => mode !== "panel" && p && import("./cfgblocked.js").then(() => window.cfgBlockedAsk(p));
+ async function whatsNewOnce() {
+-  if (whatsNewAsked || mode === "panel" || document.hidden || !$("#modal").hidden) return;
++  if (!updatesWanted() || whatsNewAsked || mode === "panel" || document.hidden || !$("#modal").hidden) return;
+   whatsNewAsked = true;
+   const w = await api(updatePath("whatsnew")).catch(() => null);
+   // something else opened meanwhile: the notes wait for the next load
+@@ -8478,7 +8488,7 @@ function iconPicker(ed) {
+       box.append(reset);
+     }
+     if (asking) {
+-      const u = input(typed, "https://example.com/icon.png", "url");
++      const u = input(typed, "https://…/icon.png", "url");
+       u.className = "icon-url";
+       u.setAttribute("aria-label", t("Image URL"));
+       u.onkeydown = (e) => {
+@@ -19922,10 +19932,10 @@ function renderUpdateMirror(r, s) {
+   const sub = el("div", "sub");
+   who.append(sub);
+   const m = s.updateMirror || "";
+-  sub.textContent = mirrorErr || (m ? t("Updates are downloaded from usemagpie.ai, and through this mirror when that fails, each checked against usemagpie.ai's checksum")
+-    : t("Updates are downloaded from usemagpie.ai, and from GitHub when that fails; a mirror can stand in for GitHub where it is slow"));
++  sub.textContent = mirrorErr || (m ? t("Updates come from the feed this build is pointed at, and through this mirror when that fails, each checked against the feed's checksum")
++    : t("Updates come from the feed this build is pointed at, and from its fallback when that fails; a mirror can stand in where the feed is slow"));
+   sub.classList.toggle("err", !!mirrorErr);
+-  sub.title = t("The update and its checksum always come from usemagpie.ai; a file from the mirror that doesn't match it is not installed.");
++  sub.title = t("The update and its checksum always come from the update feed; a file from the mirror that doesn't match it is not installed.");
+   if (!mirrorEditing) {
+     if (m) {
+       const official = el("button", "text", t("Remove mirror"));
+@@ -19936,11 +19946,11 @@ function renderUpdateMirror(r, s) {
+     } else {
+       const add = el("button", "text", t("Use a mirror…"));
+       add.onclick = () => { mirrorEditing = true; mirrorDraft = ""; renderUpdateMirror(r, s); };
+-      val.append(el("code", "", "usemagpie.ai"), add);
++      val.append(el("code", "", "GitHub"), add);
+     }
+     return;
+   }
+-  const i = input(mirrorDraft, "https://mirror.example/");
++  const i = input(mirrorDraft, "https://…/");
+   i.className = "words update-mirror-input";
+   i.setAttribute("aria-label", t("Mirror address"));
+   i.oninput = () => { mirrorDraft = i.value; };
+@@ -20094,6 +20104,12 @@ function renderSettings() {
+     about.append(r);
+     return r;
+   };
++  // Updates are off, silently, unless the switch is on: the version number
++  // stays, but no Check, no notes and no update rows are drawn (kestrel
++  // update auto on brings them back, a feed permitting).
++  if (!updatesWanted()) {
++    row(t("Version"), "", s.version);
++  } else {
+   renderUpdate(row(t("Version"), "", s.version));
+   // what changed in this version, and in one waiting; a build from source
+   // has no notes
+@@ -20145,6 +20161,7 @@ function renderSettings() {
+   row(t("Restart automatically"), s.noAutoUpdate ? t("While automatic updates are on") : t("Once an update is downloaded, restarts into it without cutting off an agent's request"), "",
+     segsOO(s.autoRestart, (v) => savePrefs({ ...keep, autoRestart: v }))).classList.add("update-restart-row", ...(s.noAutoUpdate ? ["off"] : []));
+   renderUpdateMirror(row(t("Download source"), "", ""), s);
++  }
+   const open = el("button", "text", t("Open"));
+   open.onclick = () => api("settings/reveal", {}).catch(statusErr);
+   // portable (a data folder beside kestrel, #508): everything is in there
+@@ -20169,24 +20186,11 @@ function renderSettings() {
+     const who = self.pubWho?.(s) || t("Public address");
+     row(who, t("KESTREL_PUBLIC_URL: where other computers reach the gateway, with a gateway key"), s.publicURL, copyBtn(s.publicURL, who)).id = "publicURLRow";
+   }
+-  const site = el("button", "text", t("Open"));
+-  site.onclick = () => api("open", { url: "https://usemagpie.ai" }).catch(() => {});
+-  row(t("Website"), t("downloads, docs and what's new"), "usemagpie.ai", site);
++  // No external entry point is shown: no website, community, Discord or
++  // repository link. The licenses stay, in a sheet of their own.
+   const lic = el("button", "text", t("View"));
+   lic.onclick = showNotices;
+   row(t("Open-source licenses"), t("the notices of the code and data kestrel is built with"), "", lic);
+-  const join = el("button", "discord");
+-  join.innerHTML = DISCORD_SVG;
+-  join.append(el("span", "", t("Join Discord")));
+-  join.title = "discord.gg/vGSnD3ZKQF";
+-  join.onclick = () => api("open", { url: "https://discord.gg/vGSnD3ZKQF" }).catch(() => {});
+-  // issues and the code are on GitHub, for those who'd rather not use Discord
+-  const repo = el("button", "github");
+-  repo.innerHTML = GITHUB_SVG;
+-  repo.append(el("span", "", "GitHub"));
+-  repo.title = "github.com/kestrel-app/kestrel";
+-  repo.onclick = () => api("open", { url: "https://github.com/kestrel-app/kestrel" }).catch(() => {});
+-  row(t("Community"), t("questions, ideas and feedback, on Discord or GitHub"), "", join, repo);
+   // kestrel uninstall, from the app (Jevik_AI on X deleted kestrel's folders
+   // by hand and Codex kept pointing at a gateway that was gone). Never in a
+   // browser: kestrel web would be taken off the computer serving the page.
+@@ -20936,9 +20940,8 @@ function renderGitHubToken(s) {
+   save.onclick = () => { const v = i.value.trim(); if (!v) return i.focus(); set(v); };
+   i.oninput = () => { githubTokenDraft = i.value; };
+   i.onkeydown = (e) => { e.stopPropagation(); if (e.key === "Enter") save.onclick(); };
+-  const get = el("button", "link", t("Create one ↗"));
+-  get.onclick = () => api("open", { url: "https://github.com/settings/tokens/new?description=kestrel" }).catch(() => {});
+-  val.append(i, get, save);
++  // the page that makes one is not linked: no external entry point here
++  val.append(i, save);
+ }
+ 
+ // warmTimes is a daily warm-up's times of day as settings keep them: the

@@ -1,0 +1,47 @@
+diff --git a/internal/gui/assets/i18n.js b/internal/gui/assets/i18n.js
+index fe42e49..170019c 100644
+--- a/internal/gui/assets/i18n.js
++++ b/internal/gui/assets/i18n.js
+@@ -20673,10 +20673,21 @@ function dateFmt(opts) {
+   return f;
+ }
+ 
++// brandText is the app's name in its own prose: the templates are written
++// with the upstream name, and every string shown goes through here, so the
++// whole UI reads as the branded name without touching the 6k keys.
++function brandText(s) {
++  if (typeof s !== "string") return s;
++  // A sentence's first word takes the name's capital; every other mention
++  // stays lower-case, so commands in the prose ("kestrel models") are still
++  // the commands a terminal runs.
++  return s.replace(/(^|[.!?]\s+|\n)kestrel\b/g, (_, lead) => lead + "Kestrel").replace(/\bkestrel\b/g, "kestrel");
++}
++
+ function t(s, vars) {
+   let out = I18N[locale]?.[s] ?? s;
+   if (vars) for (const k in vars) out = out.split("{" + k + "}").join(vars[k]);
+-  return out;
++  return brandText(out);
+ }
+ 
+ // tNotice is an agent's advice after a change (state.notice) in the
+@@ -20687,8 +20698,8 @@ function t(s, vars) {
+ // advice) reads as given.
+ let noticeRes;
+ function tNotice(s) {
+-  if (!s || !I18N[locale]) return s;
+-  if (I18N[locale][s]) return I18N[locale][s];
++  if (!s || !I18N[locale]) return brandText(s);
++  if (I18N[locale][s]) return brandText(I18N[locale][s]);
+   noticeRes ??= NOTICES.map((en) => {
+     const parts = en.split(/\{(\w+)\}/), names = [];
+     let re = "";
+@@ -20708,7 +20719,7 @@ function tNotice(s) {
+       const m = n.re.exec(rest);
+       if (m && (!hit || m[0].length > hit.m[0].length || (m[0].length === hit.m[0].length && n.fixed > hit.n.fixed))) hit = { n, m };
+     }
+-    if (!hit) return s;
++    if (!hit) return brandText(s);
+     const vars = {};
+     hit.n.names.forEach((k, i) => (vars[k] ??= hit.m[i + 1]));
+     out.push(t(hit.n.en, vars));

@@ -1,0 +1,28 @@
+diff --git a/internal/stats/stats.go b/internal/stats/stats.go
+index 5866150..5fe591b 100644
+--- a/internal/stats/stats.go
++++ b/internal/stats/stats.go
+@@ -29,9 +29,11 @@ import (
+ 	"github.com/kestrel-app/kestrel/internal/update"
+ )
+ 
+-// Key is the Kestrel project's key on PostHog: it can send events there and
+-// read nothing, so it is safe in the app.
+-const Key = "phc_nyDyYyrUTRGvNq5U7FBesCyM2j4GdKeqGp8ko7DBerTC"
++// Key is this build's PostHog key. "" switches the daily event off: a fork
++// must not report into the upstream project's account, so kestrel sends
++// nothing unless its owner gives it a key of their own (and, if not
++// PostHog's own host, KESTREL_STATS_HOST).
++const Key = ""
+ 
+ // Host takes the events; KESTREL_STATS_HOST points them elsewhere, for
+ // testing.
+@@ -69,7 +71,7 @@ func Run(version, what string) {
+ // Send sends the event for now's day, unless it went already or the user
+ // turned it off.
+ func Send(ctx context.Context, version, what string, now time.Time) error {
+-	if Off() {
++	if Key == "" || Off() {
+ 		return nil
+ 	}
+ 	day := now.UTC().Format("2006-01-02")

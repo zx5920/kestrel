@@ -1,0 +1,50 @@
+diff --git a/internal/gui/assets/plugins.js b/internal/gui/assets/plugins.js
+index 3b0b166..64af6d6 100644
+--- a/internal/gui/assets/plugins.js
++++ b/internal/gui/assets/plugins.js
+@@ -682,7 +682,7 @@
+     if (l.community) {
+       const v = el("span", "pm-verified");
+       v.append(glyph(SHIELD, 11, 1.5), el("span", "", t("kestrel community")));
+-      v.title = t("Written for kestrel by its community, in github.com/magpie-community/plugins");
++      v.title = t("Written by its community");
+       by.append(v);
+       return by;
+     }
+@@ -1078,13 +1078,8 @@
+     const box = el("div", "pm-foot");
+     const trust = el("p", "pm-trust");
+     trust.append(glyph(SHIELD, 12, 1.5), el("span", "", t("A plugin is someone else's code with your sign-in or your requests: install the ones you trust.")));
+-    // the docs in the reader's language: the site has en, zh and ja, and
+-    // Chinese is nearer a zh-TW reader than English is
+-    const how = el("a", "pm-link pm-write", "");
+-    how.href = "https://usemagpie.ai/docs/" + ({ zh: "zh/", "zh-TW": "zh/", ja: "ja/" }[lang()] || "") + "plugins";
+-    how.append(el("span", "", t("Write a plugin")), glyph(OUTL, 11, 1.5));
+-    how.onclick = (ev) => { ev.preventDefault(); api("open", { url: how.href }).catch(() => {}); };
+-    box.append(trust, how);
++    // no "Write a plugin" link: this build opens no external page
++    box.append(trust);
+     return box;
+   }
+ 
+@@ -1812,18 +1807,8 @@
+     if (l.providers?.length) fact(t("Signs in to"), l.providers.join(t(", ")));
+     main.append(facts);
+     const links = el("div", "pm-links");
+-    const link = (label, href) => {
+-      if (!href) return;
+-      const a = el("a", "pm-link");
+-      a.href = href;
+-      a.append(el("span", "", label), glyph(OUTL, 11, 1.5));
+-      a.onclick = (ev) => { ev.preventDefault(); api("open", { url: href }).catch(() => {}); };
+-      links.append(a);
+-    };
+-    // npm is where a package's page is; a folder on this computer has none
+-    if (!local) link("npm", "https://www.npmjs.com/package/" + l.package);
+-    link(l.github ? "GitHub" : t("Source"), l.npm?.repository);
+-    if (l.npm?.homepage && l.npm.homepage !== l.npm.repository && !l.npm.homepage.startsWith(l.npm.repository + "#")) link(t("Homepage"), l.npm.homepage);
++    // npm, GitHub and homepage links are not shown: this build opens no
++    // external page. A plugin's name, version and facts stay.
+     const like = local ? null : window.pmCounts?.like(l.package, () => { const e = entryOf(l.package); return !!e && !e.off; });
+     if (like) links.append(like);
+     main.append(links);

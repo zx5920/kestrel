@@ -1,0 +1,35 @@
+diff --git a/internal/gateway/gateway.go b/internal/gateway/gateway.go
+index e89a15a..236426f 100644
+--- a/internal/gateway/gateway.go
++++ b/internal/gateway/gateway.go
+@@ -993,11 +993,29 @@ func (s *Server) ListenAndServe(ctx context.Context) error {
+ // Handler routes the client APIs.
+ func (s *Server) Handler() http.Handler {
+ 	mux := s.routes()
++	// a Magpie-era client that still calls /v1/magpie/… is served the same
++	// route (legacyPaths)
+ 	// the goroutine dump first, ahead of every lock the rest can be stuck
+ 	// on (dumpFirst)
+ 	// a socket's turns go through all of it again (socketEntry); the
+ 	// agent's Retry-After is bounded on the way out (retryCapped)
+-	return socketEntry(s.dumpFirst(retryCapped(s.counted(headerLogged(holdCatalog(corsGuard(callerGuard(readOnlyGuard(mux, withCaller(keyLimited(s.keySlots(mux, mux))))))))))))
++	h := socketEntry(s.dumpFirst(retryCapped(s.counted(headerLogged(holdCatalog(corsGuard(callerGuard(readOnlyGuard(mux, withCaller(keyLimited(s.keySlots(mux, mux))))))))))))
++	return legacyPaths(h)
++}
++
++// legacyPaths serves /v1/magpie/… as /v1/kestrel/…, the path every route
++// moved to. The gateway address is written into other programs' settings, so
++// a client or a saved config from the Magpie era keeps working without being
++// found and rewritten; the new path is what this build writes.
++func legacyPaths(next http.Handler) http.Handler {
++	const from, to = "/v1/magpie", "/v1/kestrel"
++	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
++		if r.URL.Path == from || strings.HasPrefix(r.URL.Path, from+"/") {
++			r = r.Clone(r.Context())
++			r.URL.Path = to + strings.TrimPrefix(r.URL.Path, from)
++		}
++		next.ServeHTTP(w, r)
++	})
+ }
+ 
+ // routes are the client APIs, each by its pattern: readOnlyGuard reads

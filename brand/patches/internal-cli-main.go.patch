@@ -1,0 +1,13 @@
+diff --git a/internal/cli/main.go b/internal/cli/main.go
+index 6d24d05..bad34c8 100644
+--- a/internal/cli/main.go
++++ b/internal/cli/main.go
+@@ -303,6 +303,8 @@ var startUp = func() {
+ 	// the moves below look at (a write among them reads them again)
+ 	release := provider.Hold()
+ 	agent.RenameLegacy()
++	// what the original Magpie (and the first build of this shell) wrote
++	agent.RenameFormer()
+ 	agent.MoveCursorEfforts()
+ 	agent.MoveAntigravityEfforts()
+ 	agent.MoveOffAccountIDs()

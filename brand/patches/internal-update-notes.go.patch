@@ -1,0 +1,60 @@
+diff --git a/internal/update/notes.go b/internal/update/notes.go
+index a42a8c2..3ea2869 100644
+--- a/internal/update/notes.go
++++ b/internal/update/notes.go
+@@ -25,19 +25,33 @@ type Note struct {
+ 	Pending bool `json:"pending,omitempty"`
+ }
+ 
+-// NotesFeed is where the notes of past releases are listed: beside the
+-// update feed, on kestrel's site. KESTREL_NOTES_FEED points it elsewhere.
++// NotesFeed is where the notes of past releases are listed, beside the
++// update feed on this build's site; KESTREL_NOTES_FEED points it elsewhere.
++// "" when neither is given: What's new then shows only the current feed's
++// notes, not the history.
+ func NotesFeed() string {
+ 	if f := os.Getenv("KESTREL_NOTES_FEED"); f != "" {
+ 		return f
+ 	}
+-	return Site + "/api/notes"
++	if s := strings.TrimSpace(Site); s != "" {
++		return strings.TrimRight(s, "/") + "/api/notes"
++	}
++	return ""
+ }
+ 
+-// ReleasePage is version's page on GitHub, where its notes are when the
+-// site can't give them (#661).
++// ReleasesPage is the prefix of a version's page on the release source, set
++// at build time like Site — e.g.
++// https://github.com/OWNER/kestrel-releases/releases/tag. "" when this build
++// names none.
++var ReleasesPage = ""
++
++// ReleasePage is version's release page, where its notes are when the feed
++// can't give them (#661); "" when this build names none.
+ func ReleasePage(version string) string {
+-	return "https://github.com/yetone/magpie-releases/releases/tag/v" + strings.TrimPrefix(strings.TrimSpace(version), "v")
++	if strings.TrimSpace(ReleasesPage) == "" {
++		return ""
++	}
++	return strings.TrimRight(ReleasesPage, "/") + "/v" + strings.TrimPrefix(strings.TrimSpace(version), "v")
+ }
+ 
+ // NotesBetween asks the site for the notes of every release after after
+@@ -82,10 +96,14 @@ func NotesBack(ctx context.Context, upto string, n int, lang string) ([]Note, er
+ 
+ // askNotes is the site's list for q, each release's notes in lang.
+ func askNotes(ctx context.Context, q url.Values, lang string) ([]Note, error) {
++	feed := NotesFeed()
++	if feed == "" {
++		return nil, nil
++	}
+ 	if lang != "" {
+ 		q.Set("lang", lang)
+ 	}
+-	req, err := http.NewRequestWithContext(ctx, "GET", NotesFeed()+"?"+q.Encode(), nil)
++	req, err := http.NewRequestWithContext(ctx, "GET", feed+"?"+q.Encode(), nil)
+ 	if err != nil {
+ 		return nil, err
+ 	}

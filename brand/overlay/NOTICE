@@ -1,0 +1,20 @@
+Kestrel
+=======
+
+Kestrel is a derivative work based on kestrel (https://github.com/kestrel-app/kestrel),
+Copyright (c) 2026 yetone, licensed under the MIT License.
+
+This distribution keeps the upstream LICENSE and THIRD_PARTY_NOTICES files:
+
+  LICENSE               the MIT license and copyright notice of the original work
+  THIRD_PARTY_NOTICES   the licenses of the bundled third-party components
+
+The MIT License requires that the copyright notice and this permission notice
+be included in all copies or substantial portions of the Software. They are
+shipped with every build: the macOS app bundle carries THIRD_PARTY_NOTICES in
+Contents/Resources, and any redistributed Windows/Linux build must be
+accompanied by LICENSE and THIRD_PARTY_NOTICES.
+
+Modifications in this repository are limited to branding (product name, icons,
+window and menu titles, external links, update endpoint, URL scheme and
+resource identifiers). Functional code is upstream's.

@@ -1,0 +1,12 @@
+diff --git a/internal/mcpauth/mcpauth.go b/internal/mcpauth/mcpauth.go
+index e6cca60..efdb15a 100644
+--- a/internal/mcpauth/mcpauth.go
++++ b/internal/mcpauth/mcpauth.go
+@@ -881,7 +881,6 @@ func register(ctx context.Context, m meta, redirect string) (id, secret, method
+ 	}
+ 	reg := map[string]any{
+ 		"client_name":                "Kestrel",
+-		"client_uri":                 "https://usemagpie.ai",
+ 		"redirect_uris":              []string{redirect},
+ 		"grant_types":                []string{"authorization_code", "refresh_token"},
+ 		"response_types":             []string{"code"},

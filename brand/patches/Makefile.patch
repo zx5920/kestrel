@@ -1,0 +1,82 @@
+diff --git a/Makefile b/Makefile
+index cb6c91e..ec3fedc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,10 +1,10 @@
+ # The recipes (clean's rm -rf too) name paths relative to the working
+-# folder, so they run only in kestrel's own, known by its go.mod: run from
++# folder, so they run only in Kestrel's own, known by its go.mod: run from
+ # another one (make -f path/to/Makefile) they would act there. make -C
+ # works. go.mod is read relative to the working folder, so a path with
+ # spaces (or a symlinked Makefile) changes nothing.
+ ifneq ($(shell sed -n 's/^module //p' go.mod 2>/dev/null),github.com/kestrel-app/kestrel)
+-  $(error run make in kestrel's folder (make -C path/to/kestrel), not in $(CURDIR))
++  $(error run make in Kestrel's folder (make -C path/to/kestrel), not in $(CURDIR))
+ endif
+ 
+ # A tag may hold $, ( or `, which the shell lines below would run: the
+@@ -68,14 +68,14 @@ test-ui:
+ 
+ # macOS bundle: menu bar app with no Dock icon (LSUIElement).
+ app: build-release
+-	@rm -rf kestrel.app
+-	@mkdir -p kestrel.app/Contents/MacOS kestrel.app/Contents/Resources
+-	@cp kestrel kestrel.app/Contents/MacOS/kestrel
+-	@cp build/darwin/kestrel.icns kestrel.app/Contents/Resources/kestrel.icns
+-	@cp build/darwin/Assets.car kestrel.app/Contents/Resources/Assets.car
+-	@cp THIRD_PARTY_NOTICES kestrel.app/Contents/Resources/THIRD_PARTY_NOTICES
+-	@sed 's/@VERSION@/$(VERSION)/' build/darwin/Info.plist > kestrel.app/Contents/Info.plist
+-	@echo "  kestrel.app"
++	@rm -rf Kestrel.app
++	@mkdir -p Kestrel.app/Contents/MacOS Kestrel.app/Contents/Resources
++	@cp kestrel Kestrel.app/Contents/MacOS/kestrel
++	@cp build/darwin/kestrel.icns Kestrel.app/Contents/Resources/kestrel.icns
++	@cp build/darwin/Assets.car Kestrel.app/Contents/Resources/Assets.car
++	@cp THIRD_PARTY_NOTICES Kestrel.app/Contents/Resources/THIRD_PARTY_NOTICES
++	@sed 's/@VERSION@/$(VERSION)/' build/darwin/Info.plist > Kestrel.app/Contents/Info.plist
++	@echo "  Kestrel.app"
+ 
+ icons:
+ 	@go run build/icon/gen.go tray internal/gui/tray.png
+@@ -88,20 +88,20 @@ icons:
+ 	@go run build/icon/gen.go win-ico internal/gui/icon-windows.ico
+ 	@go run build/icon/gen.go app 1024 internal/gui/icon-1024.png
+ 	@go run build/icon/gen.go app 256 internal/gui/icon-256.png
+-	@rm -rf build/darwin/kestrel.iconset && mkdir -p build/darwin/kestrel.iconset
+-	@for s in 16 32 128 256 512; do \
+-		go run build/icon/gen.go app $$s build/darwin/kestrel.iconset/icon_$${s}x$${s}.png; \
+-		go run build/icon/gen.go app $$((s*2)) build/darwin/kestrel.iconset/icon_$${s}x$${s}@2x.png; \
+-	done
+-	@iconutil -c icns build/darwin/kestrel.iconset -o build/darwin/kestrel.icns && rm -rf build/darwin/kestrel.iconset
++	@# The .icns is written right here, PNG per size: no iconutil, so it
++	@# regenerates on any machine.
++	@go run build/icon/gen.go icns build/darwin/kestrel.icns
+ 	@# macOS 26 draws the Dock icon from AppIcon.icon (Xcode 26's actool) in every icon
+-	@# style: light, dark, and clear or tinted, where the bird's luminance takes the tint;
+-	@# the compiled Assets.car is kept in the tree so a release needn't have it
++	@# style: light, dark, and clear or tinted, where the mark's luminance takes the tint;
++	@# the compiled Assets.car is kept in the tree so a release needn't have it.
++	@# actool runs on macOS only: elsewhere regenerate Assets.car with `make icons` on a Mac.
+ 	@go run build/icon/gen.go glyph 1024 build/darwin/AppIcon.icon/Assets/kestrel.png
+-	@rm -rf build/darwin/actool && mkdir -p build/darwin/actool
+-	@xcrun actool build/darwin/AppIcon.icon --compile build/darwin/actool --platform macosx \
+-		--minimum-deployment-target 11.0 --app-icon AppIcon --output-partial-info-plist build/darwin/actool/partial.plist >/dev/null
+-	@mv build/darwin/actool/Assets.car build/darwin/Assets.car && rm -rf build/darwin/actool
++	@if command -v xcrun >/dev/null; then \
++		rm -rf build/darwin/actool && mkdir -p build/darwin/actool; \
++		xcrun actool build/darwin/AppIcon.icon --compile build/darwin/actool --platform macosx \
++			--minimum-deployment-target 11.0 --app-icon AppIcon --output-partial-info-plist build/darwin/actool/partial.plist >/dev/null; \
++		mv build/darwin/actool/Assets.car build/darwin/Assets.car && rm -rf build/darwin/actool; \
++	fi
+ 
+ release: clean build-release
+ 	@mkdir -p dist
+@@ -144,7 +144,7 @@ release-linux: assets-pack
+ 	@go build -tags "$(TAGS) packedassets" -trimpath -ldflags="$(LDFLAGS)" -o dist/kestrel-linux-$(shell go env GOARCH) .
+ 
+ clean:
+-	rm -rf kestrel kestrel.exe kestrel.app dist internal/gui/assets.zip rsrc_windows_*.syso internal/update/launcher-*.com
++	rm -rf kestrel kestrel.exe Kestrel.app dist internal/gui/assets.zip rsrc_windows_*.syso internal/update/launcher-*.com
+ 
+ # Development: the UI is served from internal/gui/assets and the window
+ # reloads itself when a file there is saved. With fswatch installed, the

@@ -1,0 +1,57 @@
+{
+  "name": "Kestrel",
+  "nameLower": "kestrel",
+  "module": "github.com/kestrel-app/kestrel",
+  "upstreamModule": "github.com/yetone/magpie",
+  "envPrefix": "KESTREL_",
+  "upstreamEnvPrefix": "MAGPIE_",
+  "providerID": "kestrel",
+  "upstreamProviderID": "magpie",
+  "keyPrefix": "sk-kestrel-key-",
+  "assetName": "kestrel-windows-amd64.exe",
+  "feedURL": "",
+  "site": "",
+  "releasesPage": "",
+
+  "protect": [
+    "usemagpie.ai",
+    "usemagpie",
+    "magpie-releases",
+    "magpie-community",
+    "magpie_price",
+    "magpie_via",
+    "magpie_fast",
+    "magpie_ultra",
+    "MAGPIE.md"
+  ],
+
+  "exts": [
+    ".go",
+    ".mod",
+    ".sum",
+    ".json",
+    ".jsonc",
+    ".js",
+    ".mjs",
+    ".ts",
+    ".html",
+    ".css",
+    ".svg",
+    ".plist",
+    ".sh",
+    ".ps1",
+    ".md"
+  ],
+
+  "skip": [
+    ".git",
+    "node_modules",
+    "dist",
+    "toolchain",
+    "brand",
+    ".brand-work",
+    ".github",
+    "site",
+    "docs"
+  ]
+}

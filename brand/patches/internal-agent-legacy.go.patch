@@ -1,0 +1,215 @@
+diff --git a/internal/agent/legacy.go b/internal/agent/legacy.go
+index 282b738..60b5264 100644
+--- a/internal/agent/legacy.go
++++ b/internal/agent/legacy.go
+@@ -1,6 +1,7 @@
+ package agent
+ 
+ import (
++	"encoding/json"
+ 	"os"
+ 	"path/filepath"
+ 	"slices"
+@@ -71,6 +72,202 @@ func RenameLegacy() {
+ 	}
+ }
+ 
++// formerID is the provider id the original Magpie wrote into the agents'
++// files, and the first build of this shell with it: the provider entries,
++// model ids and tokens RenameFormer rewrites. It is spelled out here on
++// purpose — the brand layer must not rename it, or the migration would look
++// for what it is about to write.
++const formerID = "magpie"
++
++// formerBackup is what a config is copied to before it is rewritten. It is
++// made once; rolling back is copying it over the file again.
++const formerBackup = ".pre-kestrel.bak"
++
++// RenameFormer rewrites what the original Magpie left in the agents' files
++// so it says kestrel: a model spelled magpie/… becomes kestrel/… (which also
++// writes the kestrel provider entry the agent needs), and then Codex's
++// provider table and catalog file, OpenCode's, Crush's and Pi's provider
++// entries and Claude Code's token go. It runs at start-up, after
++// RenameLegacy.
++//
++// It only touches a config that carries what Magpie wrote — its provider
++// entry, its model ids or its token — and points at this machine's gateway,
++// so a server of the user's that happens to be called magpie is left alone.
++// Each file it rewrites is backed up first, so a second run neither rewrites
++// the file nor the backup. Errors are swallowed as RenameLegacy's: a file
++// kestrel cannot rewrite is one the user can still fix from the picker.
++func RenameFormer() {
++	for _, a := range local() {
++		if _, err := os.Stat(a.Path); err != nil {
++			continue
++		}
++		if !saysFormer(a) {
++			continue
++		}
++		backupOnce(a.Path)
++		if a.ID == "pi" {
++			// its provider entry lives in models.json, which the loop below
++			// rewrites too: copy it before, not after
++			backupOnce(filepath.Join(a.Dir, "models.json"))
++		}
++		// the provider entry first, under kestrel, so the model ids below
++		// name something the agent can use; the old entry goes after
++		switch a.ID {
++		case "codex":
++			copyTOMLTable(a.Path, "model_providers."+formerID, "model_providers."+kestrelID)
++			// Set() would stash "magpie" as the provider to go back to; say
++			// kestrel first so it sees a config that is already routed
++			if v, _ := edit.GetTOMLTop(a.Path, "model_provider"); v == formerID {
++				_ = edit.SetTOMLTop(a.Path, edit.KV{Path: "model_provider", Value: kestrelID})
++			}
++		case "opencode":
++			moveJSON(a.Path, "provider."+formerID, "provider."+kestrelID)
++		case "crush":
++			moveJSON(a.Path, "providers."+formerID, "providers."+kestrelID)
++		case "pi":
++			moveJSON(filepath.Join(a.Dir, "models.json"), "providers."+formerID, "providers."+kestrelID)
++		case "claude":
++			if t, _ := edit.GetJSON(a.Path, "env.ANTHROPIC_AUTH_TOKEN"); t == formerID {
++				_ = edit.SetJSON(a.Path, edit.KV{Path: "env.ANTHROPIC_AUTH_TOKEN", Value: hereKey()})
++			}
++		}
++		for i := range a.Fields {
++			f := &a.Fields[i]
++			if strings.HasSuffix(f.Key, "effort") {
++				// a thinking level, never a model (see RenameLegacy)
++				continue
++			}
++			rest, ok := strings.CutPrefix(f.Get(), formerID+"/")
++			if !ok {
++				continue
++			}
++			if f.Set(kestrelID+"/"+rest) == nil {
++				record(a.ID, f.Key, f.Get())
++			}
++		}
++		switch a.ID {
++		case "opencode":
++			_ = edit.DelJSON(a.Path, "provider."+formerID)
++		case "crush":
++			_ = edit.DelJSON(a.Path, "providers."+formerID)
++		case "pi":
++			_ = edit.DelJSON(filepath.Join(a.Dir, "models.json"), "providers."+formerID)
++		case "codex":
++			// the model list Magpie wrote, and the config naming it
++			if c, _ := edit.GetTOMLTop(a.Path, "model_catalog_json"); strings.Contains(c, formerID+"-models.json") {
++				from := strings.Trim(c, `"'`)
++				to := strings.Replace(from, formerID+"-models.json", kestrelID+"-models.json", 1)
++				if _, err := os.Stat(to); os.IsNotExist(err) {
++					_ = os.Rename(from, to)
++				}
++				_ = edit.SetTOMLTop(a.Path, edit.KV{Path: "model_catalog_json", Value: to})
++			}
++			if tables, err := edit.TOMLTables(a.Path); err == nil && slices.Contains(tables, "model_providers."+formerID) {
++				_ = edit.DelTOMLTable(a.Path, "model_providers."+formerID)
++			}
++			// the rewrite above can leave Codex beside the sign-in with no
++			// provider named; it names kestrel's here, as an Apply does
++			if v, _ := edit.GetTOMLTop(a.Path, "model_provider"); v != kestrelID {
++				_ = edit.SetTOMLTop(a.Path, edit.KV{Path: "model_provider", Value: kestrelID})
++			}
++			os.Remove(filepath.Join(a.Dir, formerID+"-models.json"))
++		case "claude":
++			if t, _ := edit.GetJSON(a.Path, "env.ANTHROPIC_AUTH_TOKEN"); t == formerID {
++				_ = edit.SetJSON(a.Path, edit.KV{Path: "env.ANTHROPIC_AUTH_TOKEN", Value: hereKey()})
++			}
++		}
++	}
++}
++
++// copyTOMLTable writes table to from's keys, under a new name, without
++// touching from: the old one is deleted once the model ids no longer name
++// it. A table already at to is left as it is.
++func copyTOMLTable(path, from, to string) {
++	if t, err := edit.GetTOMLTable(path, to); err == nil && len(t) > 0 {
++		return
++	}
++	t, err := edit.GetTOMLTable(path, from)
++	if err != nil || len(t) == 0 {
++		return
++	}
++	kvs := make([]edit.KV, 0, len(t))
++	for k, v := range t {
++		switch k {
++		case "name":
++			v = kestrelID
++		case "experimental_bearer_token":
++			v = hereKey()
++		}
++		kvs = append(kvs, edit.KV{Path: k, Value: v})
++	}
++	_ = edit.SetTOMLTable(path, to, kvs...)
++}
++
++// moveJSON copies a provider object to its kestrel key, as it is, then
++// deletes the magpie one: a key spelled magpie.base_url becomes
++// kestrel.base_url with the same address.
++func moveJSON(path, from, to string) {
++	if raw, ok := edit.GetJSONRaw(path, to); ok && strings.TrimSpace(raw) != "" && raw != "{}" {
++		return
++	}
++	raw, ok := edit.GetJSONRaw(path, from)
++	if !ok {
++		return
++	}
++	_ = edit.SetJSON(path, edit.KV{Path: to, Value: json.RawMessage(raw)})
++}
++
++// saysFormer is whether a's config carries a magpie provider entry of ours:
++// it says magpie and points at this machine's gateway (or its port), not at
++// some server of the user's that happens to be called magpie.
++func saysFormer(a *Agent) bool {
++	if ours(a.Path) {
++		return true
++	}
++	switch a.ID {
++	case "pi":
++		return ours(filepath.Join(a.Dir, "models.json"))
++	case "codex":
++		if b, err := os.ReadFile(a.Path); err == nil {
++			txt := string(b)
++			return strings.Contains(txt, "model_providers."+formerID) && loopback(txt)
++		}
++	}
++	return false
++}
++
++// ours is whether the file says magpie and points at the gateway.
++func ours(path string) bool {
++	b, err := os.ReadFile(path)
++	if err != nil || !strings.Contains(string(b), formerID) {
++		return false
++	}
++	return loopback(string(b))
++}
++
++// loopback is whether a config text points at this machine's gateway.
++func loopback(txt string) bool {
++	return strings.Contains(txt, "127.0.0.1") || strings.Contains(txt, "localhost") ||
++		strings.Contains(txt, "[::1]") || strings.Contains(txt, ":3425")
++}
++
++// backupOnce copies path to path+formerBackup unless that copy is already
++// there: a second run never overwrites the backup made before the first.
++func backupOnce(path string) {
++	if path == "" {
++		return
++	}
++	b := path + formerBackup
++	if _, err := os.Stat(b); err == nil {
++		return
++	}
++	src, err := os.ReadFile(path)
++	if err != nil {
++		return
++	}
++	_ = os.WriteFile(b, src, 0o600)
++}
++
+ // MoveCursorEfforts moves an agent set to one of Cursor's ids at an effort
+ // (cursor/grok-4.7-low), from before kestrel offered each family as one
+ // model, to that model (cursor/grok-4.7) spelled the same way, and — when

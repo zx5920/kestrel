@@ -1,0 +1,50 @@
+diff --git a/internal/stats/plugins.go b/internal/stats/plugins.go
+index da0de8f..8a6acbc 100644
+--- a/internal/stats/plugins.go
++++ b/internal/stats/plugins.go
+@@ -23,12 +23,13 @@ import (
+ // own act, sent when they make it.
+ 
+ // Site takes the day's plugins and the likes; KESTREL_SITE_HOST points
+-// them elsewhere, for testing.
++// them elsewhere. "" when this build names no site: the counts are then
++// simply off, and nothing is sent anywhere.
+ func Site() string {
+ 	if h := os.Getenv("KESTREL_SITE_HOST"); h != "" {
+ 		return strings.TrimRight(h, "/")
+ 	}
+-	return update.Site
++	return strings.TrimRight(strings.TrimSpace(update.Site), "/")
+ }
+ 
+ // publicPlugins is plugin.Public; tests put their own.
+@@ -37,6 +38,9 @@ var publicPlugins = plugin.Public
+ // sendPlugins tells usemagpie.ai the plugins installed here Discover
+ // lists; nothing when there are none.
+ func sendPlugins(ctx context.Context, id string) error {
++	if Site() == "" {
++		return nil
++	}
+ 	names := publicPlugins(ctx)
+ 	if len(names) == 0 {
+ 		return nil
+@@ -56,6 +60,9 @@ type Counts struct {
+ 
+ // PluginCounts asks usemagpie.ai each plugin's counts, by Discover's key.
+ func PluginCounts(ctx context.Context) (map[string]Counts, error) {
++	if Site() == "" {
++		return nil, nil
++	}
+ 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+ 	defer cancel()
+ 	req, err := http.NewRequestWithContext(ctx, "GET", Site()+"/api/plugins/stats", nil)
+@@ -98,6 +105,9 @@ func Like(ctx context.Context, name string, on bool) (int, error) {
+ }
+ 
+ func post(ctx context.Context, path string, in any, out any) error {
++	if Site() == "" {
++		return nil
++	}
+ 	body, _ := json.Marshal(in)
+ 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+ 	defer cancel()

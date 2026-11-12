@@ -1,0 +1,13 @@
+diff --git a/internal/shortcut/shortcut_windows.go b/internal/shortcut/shortcut_windows.go
+index 8bee713..0d0c465 100644
+--- a/internal/shortcut/shortcut_windows.go
++++ b/internal/shortcut/shortcut_windows.go
+@@ -51,7 +51,7 @@ func registerUninstall(exe string) {
+ 		"Publisher":       Name,
+ 		"InstallLocation": filepath.Dir(exe),
+ 		"UninstallString": UninstallCommand(exe),
+-		"URLInfoAbout":    "https://usemagpie.ai",
++		// no URLInfoAbout: this build points at no external site
+ 	} {
+ 		_ = k.SetStringValue(name, v)
+ 	}

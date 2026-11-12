@@ -1,0 +1,49 @@
+diff --git a/main.go b/main.go
+index 4d9c7a7..fad88a4 100644
+--- a/main.go
++++ b/main.go
+@@ -4,6 +4,8 @@ package main
+ 
+ import (
+ 	_ "embed"
++	"os"
++	"strings"
+ 
+ 	"github.com/kestrel-app/kestrel/internal/cli"
+ 	"github.com/kestrel-app/kestrel/internal/notices"
+@@ -12,7 +14,7 @@ import (
+ )
+ 
+ // version is set at build time: -ldflags "-X main.version=…" (Makefile,
+-// Dockerfile, magpie-releases), so it stays in package main.
++// Dockerfile, kestrel-releases), so it stays in package main.
+ var version = "dev"
+ 
+ // the notices of what is compiled into every build (moejs's Intl data and
+@@ -23,6 +25,26 @@ var version = "dev"
+ var thirdParty string
+ 
+ func main() {
++	adoptLegacyEnv()
+ 	notices.Text = thirdParty
+ 	cli.Main(version)
+ }
++
++// adoptLegacyEnv carries the environment a Magpie-era script or shortcut
++// still sets (MAGPIE_ADDR and the rest) over to its KESTREL_ name, and takes
++// the old name out of the environment: nothing this build reads looks for
++// MAGPIE_ any more, and a child process (an agent, a plugin) must not be
++// handed one as if it were its own. The new name wins when both are set.
++func adoptLegacyEnv() {
++	for _, kv := range os.Environ() {
++		name, val, ok := strings.Cut(kv, "=")
++		if !ok || !strings.HasPrefix(name, "MAGPIE_") {
++			continue
++		}
++		to := "KESTREL_" + strings.TrimPrefix(name, "MAGPIE_")
++		if os.Getenv(to) == "" {
++			_ = os.Setenv(to, val)
++		}
++		_ = os.Unsetenv(name)
++	}
++}

@@ -1,0 +1,23 @@
+diff --git a/internal/access/access.go b/internal/access/access.go
+index 393a326..2a9d8be 100644
+--- a/internal/access/access.go
++++ b/internal/access/access.go
+@@ -26,8 +26,16 @@ import (
+ )
+ 
+ const Prefix = "sk-kestrel-key-"
+-const legacyLANPrefix = "sk-kestrel-"
+-const revokedLANPrefix = "sk-kestrel-revoked-"
++
++// legacyLANPrefix is the key namespace the original Magpie issued. It is
++// still accepted, and is still what such a key is masked and exported as, so
++// a key written into a client before the rename keeps working; a new key is
++// Prefix' form.
++const legacyLANPrefix = "sk-magpie-"
++
++// revokedLANPrefix marks a revoked default key in settings. Kept in its
++// Magpie form so a key revoked before the rename stays recognised.
++const revokedLANPrefix = "sk-magpie-revoked-"
+ 
+ func Managed(secret string) bool {
+ 	return strings.HasPrefix(secret, legacyLANPrefix)

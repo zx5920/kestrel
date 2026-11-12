@@ -1,0 +1,39 @@
+diff --git a/internal/cli/update_cli.go b/internal/cli/update_cli.go
+index 95eccd8..cfad9a5 100644
+--- a/internal/cli/update_cli.go
++++ b/internal/cli/update_cli.go
+@@ -40,6 +40,9 @@ func updateAutoCmd(args []string) error {
+ 	for _, a := range args {
+ 		switch a {
+ 		case "on", "off":
++			// AutoUpdate is the switch this build ships with off: on turns
++			// it on (a feed still has to be configured), off puts it back.
++			s.AutoUpdate = a == "on"
+ 			s.NoAutoUpdate = a == "off"
+ 		case "download", "notify":
+ 			s.NoAutoDownload = a == "notify"
+@@ -62,8 +65,8 @@ func updateAutoCmd(args []string) error {
+ 			every = k
+ 		}
+ 	}
+-	if s.NoAutoUpdate {
+-		fmt.Println("automatic updates are off", muted.Render("· kestrel update or Settings' Check looks for one (every "+every+" when on)"))
++	if !s.AutoUpdate || s.NoAutoUpdate {
++		fmt.Println("automatic updates are off", muted.Render("· the default for this build; kestrel update auto on (with an update feed configured) turns the checks back on, kestrel update checks now"))
+ 		if s.NoAutoDownload {
+ 			fmt.Println(muted.Render("  a newer version found is only said to be out; Download update or kestrel update downloads it"))
+ 		}
+@@ -235,11 +238,11 @@ func updateCmd(args []string) error {
+ 		return nil
+ 	}
+ 	if !update.Released(version) {
+-		return fmt.Errorf("this kestrel was built from source; update it the way you built it, or get the release from %s", update.Site)
++		return fmt.Errorf("this kestrel was built from source; update it the way you built it, or get the release from %s", update.Home())
+ 	}
+ 	if app := update.Bundle(); app != "" {
+ 		if update.Stuck(app) != "" {
+-			return fmt.Errorf("%s can't be replaced where it is; move kestrel to Applications, or download the new version from %s", tilde(app), update.Site)
++			return fmt.Errorf("%s can't be replaced where it is; move kestrel to Applications, or download the new version from %s", tilde(app), update.Home())
+ 		}
+ 		fmt.Println(muted.Render("  downloading " + update.AppAsset() + via(ctx) + " …"))
+ 		staged, err := update.Stage(ctx, rel, app)

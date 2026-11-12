@@ -1,0 +1,29 @@
+diff --git a/internal/settings/settings.go b/internal/settings/settings.go
+index 0bb6d72..d504f12 100644
+--- a/internal/settings/settings.go
++++ b/internal/settings/settings.go
+@@ -516,6 +516,12 @@ type Settings struct {
+ 	// puts it in as it quits, and Settings' version row still offers it.
+ 	NoUpdatePill bool   `json:"noUpdatePill,omitempty"`
+ 	UpdateSkip   string `json:"updateSkip,omitempty"`
++	// AutoUpdate is the explicit switch: this build ships with updates off
++	// and silent, and nothing asks a feed, shows an update row or a pill, or
++	// fetches release notes until this is set (kestrel update auto on). It
++	// needs a feed too: KESTREL_UPDATE_FEED, updateFeed here, or the
++	// FeedURL/Site a build was made with.
++	AutoUpdate bool `json:"autoUpdate,omitempty"`
+ 	// NoAutoUpdate stops kestrel asking for a newer version by itself, and
+ 	// so downloading one (#472): only Settings' Check, or kestrel update,
+ 	// asks then. UpdateEvery is how often it asks otherwise, in minutes:
+@@ -549,6 +555,11 @@ type Settings struct {
+ 	// the update feed's ?channel=stable (ssharpcc on X). Settings' Update
+ 	// channel and kestrel update channel set it.
+ 	UpdateChannel string `json:"updateChannel,omitempty"`
++	// UpdateFeed is where this build's update JSON is read, over the
++	// address its build named (internal/update's FeedURL/Site) and under
++	// KESTREL_UPDATE_FEED: the feed of a self-hosted release source. No
++	// page writes it; it is set by hand in settings.json.
++	UpdateFeed string `json:"updateFeed,omitempty"`
+ 	// Vision is the model that describes an image to a model that can't see
+ 	// it: a model's id (provider/model, group/<id>), "off" to turn such an
+ 	// image away, or empty for one kestrel picks (see gateway.seer).
