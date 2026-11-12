@@ -11,7 +11,7 @@ brand/
   brand.json          the names, the protect list, what the rename reads
   apply/              the applier: rename, then patches, then the overlay
   patches/            one unified diff per upstream file this fork edits
-  overlay/            whole files this fork owns
+  _overlay/           whole files this fork owns (the "_" keeps Go out)
 sync.ps1              sync → apply → build → update.json (→ gh release)
 .github/workflows/follow-upstream.yml   the same, on a schedule
 ```
@@ -34,9 +34,11 @@ sync.ps1              sync → apply → build → update.json (→ gh release)
    (`git apply --3way`), so a hunk whose context upstream moved around still
    lands.
 
-3. **Overlay** (`brand/overlay/**`) — files this fork owns outright: the
-   icons, `NOTICE`, the migration's test. Copied last and never rewritten, so
-   they are written in their final spelling.
+3. **Overlay** (`brand/_overlay/**`) — files this fork owns outright: the
+   icons, `NOTICE`, the repository README, the migration's test. Copied last
+   and never rewritten, so they are written in their final spelling. The
+   leading underscore keeps `go build ./...` from treating the copies as
+   packages of this module.
 
 `brand/apply` runs them in that order and writes `.brand-applied` into the
 tree, so a tree cannot be branded twice.
@@ -83,7 +85,7 @@ with "a patch no longer applies". Nothing is built, nothing is published. Then:
 
 If a patch is no longer wanted at all — upstream did the same thing — delete
 it. If the change is bigger than a patch can carry, move the file to
-`brand/overlay/` instead: same path, whole file, final spelling.
+`brand/_overlay/` instead: same path, whole file, final spelling.
 
 Rule of thumb: a patch stays a patch while its diff is small. Past ~150 lines,
 or when the file is really this fork's, it belongs in the overlay.

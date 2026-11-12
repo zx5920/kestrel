@@ -11,8 +11,9 @@
 //     text files, with brand.json's protect list put aside first;
 //  2. brand/patches/*.patch, unified diffs against upstream's own text,
 //     applied three-way so a moved hunk still lands;
-//  3. brand/overlay/**, whole files this fork owns, copied last and never
-//     rewritten — they are written in their final form.
+//  3. brand/_overlay/**, whole files this fork owns, copied last and never
+//     rewritten — they are written in their final form. The leading
+//     underscore keeps the Go tool from walking the copies as packages.
 //
 // Every step is idempotent: running it twice writes the same bytes.
 //
@@ -59,7 +60,7 @@ type Brand struct {
 	// domains, the catalog JSON keys that are a wire format, referral codes.
 	Protect []string `json:"protect"`
 	// Exts are the text files the rename reads. Binary assets (icons, the
-	// .exe) are never rewritten; they come from brand/overlay.
+	// .exe) are never rewritten; they come from brand/_overlay.
 	Exts []string `json:"exts"`
 	// Skip are directories neither the rename nor the walk enters.
 	Skip []string `json:"skip"`
@@ -210,7 +211,7 @@ func apply(root, brandPath string, b *Brand, check, renameOnly bool) (int, error
 	}
 
 	// 3. the overlay, last, as it is
-	overlay := filepath.Join(brandPath, "overlay")
+	overlay := filepath.Join(brandPath, "_overlay")
 	if _, err := os.Stat(overlay); err == nil {
 		err = filepath.Walk(overlay, func(p string, fi os.FileInfo, err error) error {
 			if err != nil || fi.IsDir() {
@@ -246,7 +247,7 @@ func countLayerFiles(root, brandPath string) int {
 	n := 0
 	patches, _ := filepath.Glob(filepath.Join(brandPath, "patches", "*.patch"))
 	n += len(patches)
-	overlay := filepath.Join(brandPath, "overlay")
+	overlay := filepath.Join(brandPath, "_overlay")
 	filepath.Walk(overlay, func(p string, fi os.FileInfo, err error) error {
 		if err != nil || fi.IsDir() {
 			return nil

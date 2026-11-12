@@ -10,7 +10,7 @@
   upstream never conflicts. This script is the whole loop:
 
     1. git fetch upstream && git merge upstream/main
-    2. reset dist/src to the new HEAD, apply brand/ (rename + patches + overlay)
+    2. reset dist/src to the new HEAD, apply brand/ (rename + patches + _overlay)
     3. build the Windows amd64 binary and its launcher
     4. write dist/update.json (version, url, size, sha256)
 
