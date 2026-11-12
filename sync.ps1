@@ -84,11 +84,17 @@ try {
 			RunGit @("remote", "add", "upstream", $UpstreamUrl) | Out-Null
 		}
 		RunGit @("fetch", "--quiet", "upstream", $UpstreamBranch) | Out-Null
+		# a machine with no git identity (a fresh CI runner, a new laptop) would
+		# fail at the merge commit; the fallback is only for this commit
+		$ident = @()
+		if (-not (& git config user.email)) {
+			$ident = @("-c", "user.name=kestrel sync", "-c", "user.email=kestrel@localhost")
+		}
 		# a merge, not a fast-forward: this fork's commits (brand/, sync.ps1,
 		# the workflow) are not upstream's descendants. It cannot conflict —
 		# the commits here never touch upstream's files — and if it does,
 		# something was committed that belongs in brand/ instead.
-		$merge = & git merge --no-edit "upstream/$UpstreamBranch" 2>&1
+		$merge = & git @ident merge --no-edit "upstream/$UpstreamBranch" 2>&1
 		if ($LASTEXITCODE -ne 0) {
 			Fail ("merging upstream/$UpstreamBranch conflicted — the fork must only commit brand/, sync.ps1 and .github/workflows:`n" + ($merge -join "`n"))
 		}
