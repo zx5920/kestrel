@@ -99,27 +99,44 @@ try {
 		# something was committed that belongs in brand/ instead.
 		$merge = & git @ident merge --no-edit "upstream/$UpstreamBranch" 2>&1
 		if ($LASTEXITCODE -ne 0) {
-			# docs/ and site/ are upstream's own documentation and website.
-			# They are removed from this fork, so an upstream edit to one of
-			# them is a modify/delete conflict: keep them deleted and finish
-			# the merge. Anything else is a real conflict and stops the build.
+			# docs/, site/ and the Chinese README are upstream's and are not in
+			# this fork; the README is this fork's own. An upstream edit to any
+			# of them is a modify/delete (or modify/modify) conflict. Resolve
+			# those the way this fork has them and finish the merge. Anything
+			# else is a real conflict and stops the build.
 			$unmerged = @(& git diff --name-only --diff-filter=U)
-			$outside = @($unmerged | Where-Object { $_ -and $_ -notmatch '^(docs|site)/' })
-			if (-not $unmerged -or $outside.Count -gt 0) {
+			$known = @($unmerged | Where-Object { $_ -and ($_ -match '^(docs|site)/' -or $_ -eq "README.md" -or $_ -eq "README.zh-CN.md") })
+			if (-not $unmerged -or $known.Count -ne $unmerged.Count) {
 				Fail ("merging upstream/$UpstreamBranch conflicted — the fork must only commit brand/, sync.ps1 and .github/workflows:`n" + ($merge -join "`n"))
 			}
-			RunGit @("rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs", "site") | Out-Null
+			if ($unmerged -contains "README.md") {
+				# this fork's README, not upstream's: keep ours
+				RunGit @("checkout", "--ours", "--", "README.md") | Out-Null
+				RunGit @("add", "--", "README.md") | Out-Null
+			}
+			RunGit @("rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs", "site", "README.zh-CN.md") | Out-Null
 			$finish = & git @ident commit --no-edit 2>&1
-			if ($LASTEXITCODE -ne 0) { Fail ("merging upstream/$UpstreamBranch stopped at a docs/site removal:`n" + ($finish -join "`n")) }
-			Write-Host "   upstream: $($unmerged.Count) docs/site changes dropped (removed from this fork)"
+			if ($LASTEXITCODE -ne 0) { Fail ("merging upstream/$UpstreamBranch stopped at a docs/site/README removal:`n" + ($finish -join "`n")) }
+			Write-Host "   upstream: $($unmerged.Count) docs/site/README changes dropped (the fork has its own)"
 		}
 		# a merge that succeeded can still have brought in new files under the
-		# removed directories; take them out too, so the tree stays as this fork is
-		if (@(& git ls-files -- docs site).Count -gt 0) {
-			RunGit @("rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs", "site") | Out-Null
-			$drop = & git @ident commit -q -m "repo: drop upstream's docs and site from this fork" 2>&1
-			if ($LASTEXITCODE -ne 0) { Fail ("dropping upstream docs/site failed:`n" + ($drop -join "`n")) }
-			Write-Host "   upstream: new docs/site files dropped (removed from this fork)"
+		# removed paths; take them out too, so the tree stays as this fork is
+		if (@(& git ls-files -- docs site README.zh-CN.md).Count -gt 0) {
+			RunGit @("rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs", "site", "README.zh-CN.md") | Out-Null
+			$drop = & git @ident commit -q -m "repo: drop upstream's docs, site and Chinese readme" 2>&1
+			if ($LASTEXITCODE -ne 0) { Fail ("dropping upstream docs/site/README failed:`n" + ($drop -join "`n")) }
+			Write-Host "   upstream: new docs/site/README files dropped (the fork has its own)"
+		}
+		# upstream can rename README.md away or add a new one; the fork's own
+		# text is what the repository shows and what the build brands
+		$ownReadme = Join-Path $root "brand\_overlay\README.md"
+		$readme = Join-Path $root "README.md"
+		if ((Test-Path $ownReadme) -and (-not (Test-Path $readme) -or ([IO.File]::ReadAllText($readme) -ne [IO.File]::ReadAllText($ownReadme)))) {
+			Copy-Item $ownReadme $readme -Force
+			RunGit @("add", "--", "README.md") | Out-Null
+			$own = & git @ident commit -q -m "repo: keep this fork's readme" 2>&1
+			if ($LASTEXITCODE -ne 0) { Fail ("restoring the fork's README failed:`n" + ($own -join "`n")) }
+			Write-Host "   upstream: README replaced with this fork's"
 		}
 		if ($merge -match "Already up to date") { Write-Host "   upstream: nothing new" }
 	}
