@@ -54,9 +54,9 @@ $work = Join-Path $root $Work
 
 function Step([string]$text) { Write-Host "`n==> $text" -ForegroundColor Cyan }
 function Fail([string]$text) { Write-Host "error: $text" -ForegroundColor Red; exit 1 }
-function RunGit([string[]]$args, [string]$dir = $root) {
-	$out = & git -C $dir @args 2>&1
-	if ($LASTEXITCODE -ne 0) { Fail ("git " + ($args -join " ") + "`n" + ($out -join "`n")) }
+function RunGit([string[]]$cmd, [string]$dir = $root) {
+	$out = & git -C $dir @cmd 2>&1
+	if ($LASTEXITCODE -ne 0) { Fail ("git " + ($cmd -join " ") + "`n" + ($out -join "`n")) }
 	return $out
 }
 
