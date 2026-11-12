@@ -54,7 +54,7 @@ $work = Join-Path $root $Work
 
 function Step([string]$text) { Write-Host "`n==> $text" -ForegroundColor Cyan }
 function Fail([string]$text) { Write-Host "error: $text" -ForegroundColor Red; exit 1 }
-function Git([string[]]$args, [string]$dir = $root) {
+function RunGit([string[]]$args, [string]$dir = $root) {
 	$out = & git -C $dir @args 2>&1
 	if ($LASTEXITCODE -ne 0) { Fail ("git " + ($args -join " ") + "`n" + ($out -join "`n")) }
 	return $out
@@ -77,13 +77,13 @@ try {
 	if (-not $SkipSync) {
 		Step "upstream: $UpstreamUrl ($UpstreamBranch)"
 		if ($dirty) {
-			Fail "the tree has uncommitted changes; commit or stash them first (the merge must be a fast-forward of upstream's files)"
+			Fail "the tree has uncommitted changes; commit or stash them first (the merge needs a clean tree)"
 		}
 		$remotes = & git remote
 		if ($remotes -notcontains "upstream") {
-			Git @("remote", "add", "upstream", $UpstreamUrl) | Out-Null
+			RunGit @("remote", "add", "upstream", $UpstreamUrl) | Out-Null
 		}
-		Git @("fetch", "--quiet", "upstream", $UpstreamBranch) | Out-Null
+		RunGit @("fetch", "--quiet", "upstream", $UpstreamBranch) | Out-Null
 		# a merge, not a fast-forward: this fork's commits (brand/, sync.ps1,
 		# the workflow) are not upstream's descendants. It cannot conflict —
 		# the commits here never touch upstream's files — and if it does,
@@ -95,9 +95,9 @@ try {
 		if ($merge -match "Already up to date") { Write-Host "   upstream: nothing new" }
 	}
 
-	$head = (Git @("rev-parse", "HEAD")).Trim()
-	$short = (Git @("rev-parse", "--short", "HEAD")).Trim()
-	$count = (Git @("rev-list", "--count", "HEAD")).Trim()
+	$head = (RunGit @("rev-parse", "HEAD")).Trim()
+	$short = (RunGit @("rev-parse", "--short", "HEAD")).Trim()
+	$count = (RunGit @("rev-list", "--count", "HEAD")).Trim()
 	if (-not $Version) { $Version = "0.1.$count" }
 	if ($Version -notmatch '^\d+\.\d+\.\d+$') { Fail "version must be x.y.z, not '$Version'" }
 
@@ -121,10 +121,10 @@ try {
 	Step "brand layer -> $Work at $short"
 	& git worktree prune
 	if (-not (Test-Path (Join-Path $work ".git"))) {
-		Git @("worktree", "add", "--detach", $Work, $head) | Out-Null
+		RunGit @("worktree", "add", "--detach", $Work, $head) | Out-Null
 	}
-	Git @("checkout", "--detach", "--force", $head) $work | Out-Null
-	Git @("clean", "-fdq") $work | Out-Null
+	RunGit @("checkout", "--detach", "--force", $head) $work | Out-Null
+	RunGit @("clean", "-fdq") $work | Out-Null
 	Push-Location $root
 	try {
 		& go run ./brand/apply -root $Work -brand brand
