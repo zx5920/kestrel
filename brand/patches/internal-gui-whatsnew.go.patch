@@ -11,24 +11,3 @@ index b4d85ad..e03f769 100644
  // notes.yml writes a release's Chinese notes each hour once DeepSeek
  // answers (#2260), the site keeps an answer five minutes, and a page kept
  // open, or opened again, should show them without a restart (yuu003348 on
-@@ -205,6 +205,10 @@ type whatsNewJSON struct {
- // page showing them says so with seen); asked again (all, from Settings),
- // those or the current version's alone.
- func (n *whatsNew) get(ctx context.Context, all bool, lang string) whatsNewJSON {
-+	if !updatesOn(settings.Load()) {
-+		// Updates are off, silently: no notes are asked of any feed.
-+		return whatsNewJSON{Current: Version, Releases: []update.Note{}}
-+	}
- 	n.mu.Lock()
- 	after, pending, shown := n.after, n.pending, n.shown
- 	if !pending {
-@@ -281,6 +285,9 @@ func notesKey(lang string) string {
- // before, if any, so a page keeps what it had.
- func (n *whatsNew) before(ctx context.Context, count int, lang string) whatsNewJSON {
- 	j := whatsNewJSON{Current: Version, Releases: []update.Note{}}
-+	if !updatesOn(settings.Load()) {
-+		return j
-+	}
- 	if !update.Released(Version) {
- 		return j
- 	}

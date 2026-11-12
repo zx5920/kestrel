@@ -23,21 +23,27 @@ Windows.
 
 Updates check **your** release feed,
 `https://github.com/<owner>/kestrel/releases/latest/download/update.json`, and
-they are **off by default**. To turn the check on:
+they are **on by default**, as upstream's are: Kestrel looks every six hours
+and at start-up, downloads a newer version as soon as it finds one, and offers
+**Restart to update** — the window comes back on the new version, and the old
+one is kept beside it as `kestrel.exe.old`.
 
 ```
-kestrel update auto on        # off again: kestrel update auto off
-kestrel update check          # ask now
+kestrel update auto off       # stop the automatic checks
+kestrel update auto on        # back on
+kestrel update check          # ask the feed now
 kestrel update                # download, verify and install the new build
 ```
 
-The new build is started the next time the app opens; the old one is kept
-beside it as `kestrel.exe.old`.
+Settings' **Restart automatically** skips the click: a downloaded update is
+restarted into once the gateway has nothing in flight.
 
 ## Building from source
 
-The repository tracks upstream's files **byte for byte**. Every Kestrel change
-lives under [`brand/`](brand/README.md) and is applied to a throwaway worktree
+The repository tracks upstream's files **byte for byte**, except the docs,
+the marketing site and upstream's own README, which this fork drops. Every
+Kestrel change lives under [`brand/`](brand/README.md) and is applied to a
+throwaway worktree
 at build time, which is why merging `upstream/main` never conflicts. One
 command does the whole loop — sync, brand, build, `update.json`:
 
