@@ -1,0 +1,32 @@
+diff --git a/internal/update/signed.go b/internal/update/signed.go
+index 7d4861e2e..eb561a772 100644
+--- a/internal/update/signed.go
++++ b/internal/update/signed.go
+@@ -6,7 +6,6 @@ import (
+ 	"encoding/hex"
+ 	"errors"
+ 	"fmt"
+-	"os"
+ 	"strings"
+ )
+ 
+@@ -41,14 +40,12 @@ type Signed struct {
+ }
+ 
+ // signedRequired reports whether version must carry a valid signature.
+-// KESTREL_UPDATE_FEED, which points updates at a server of one's own for
+-// testing, lifts the requirement (that server can't sign with our key); a
+-// signature it does give is still checked.
++// This fork's releases are built and published by its own workflow and carry
++// no signature, so a signature is never required: the feed's SHA-256 is the
++// integrity check, as it was before the signed era. A signature a feed does
++// give is still verified.
+ func signedRequired(version string) bool {
+-	if os.Getenv("KESTREL_UPDATE_FEED") != "" {
+-		return false
+-	}
+-	return !Newer(firstSigned, version)
++	return false
+ }
+ 
+ // verify checks rel against the embedded key and, when it is signed, sets
