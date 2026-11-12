@@ -1,8 +1,39 @@
 diff --git a/internal/gui/assets/plugins.js b/internal/gui/assets/plugins.js
-index 3b0b166..64af6d6 100644
+index 3b0b166d4..83e200c77 100644
 --- a/internal/gui/assets/plugins.js
 +++ b/internal/gui/assets/plugins.js
-@@ -682,7 +682,7 @@
+@@ -31,6 +31,22 @@
+   let checked = null;    // ...and what it said: { at, by: spec → check }
+   let shown = "";
+ 
++  // what a plugin says of itself can name the project kestrel was built
++  // from; those words are hidden, never rewritten. Package ids stay as they
++  // are — installs and updates resolve by them — and nothing that acts (a
++  // button, a field, a link) is touched.
++  const UPSTREAM = /magpie/i;
++  function hideUpstream(root) {
++    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
++    const hide = new Set();
++    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
++      if (!UPSTREAM.test(n.nodeValue || "")) continue;
++      const b = n.parentElement?.closest("p, li, h1, h2, h3, h4, h5, h6, pre, code, .pm-by, .pm-note, .pm-dsum, .pm-fact");
++      if (b && !b.closest("button, a, input, textarea, select")) hide.add(b);
++    }
++    for (const b of hide) b.hidden = true;
++  }
++
+   const SEARCH = "M7 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M10 10l3 3";
+   const DOWN = "M8 3v7.5 M4.8 7.6 8 10.8l3.2-3.2 M3.5 13h9";
+   const STAR = "M8 2.2l1.8 3.7 4 .6-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4L2.2 6.5l4-.6z";
+@@ -603,6 +619,7 @@
+       meta.append(b);
+     }
+     c.append(top, sum, meta);
++    hideUpstream(c);
+     c.onclick = () => detail(l);
+     c.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); detail(l); } };
+     return c;
+@@ -682,11 +699,12 @@
      if (l.community) {
        const v = el("span", "pm-verified");
        v.append(glyph(SHIELD, 11, 1.5), el("span", "", t("kestrel community")));
@@ -11,7 +42,12 @@ index 3b0b166..64af6d6 100644
        by.append(v);
        return by;
      }
-@@ -1078,13 +1078,8 @@
+     by.append(el("span", "", l.npm?.publisher || l.github?.owner || l.package));
++    hideUpstream(by);
+     if (l.github) {
+       const u = el("span", "pm-chip warn");
+       u.append(el("span", "dot"), el("span", "", t("Unreviewed")));
+@@ -1078,13 +1096,8 @@
      const box = el("div", "pm-foot");
      const trust = el("p", "pm-trust");
      trust.append(glyph(SHIELD, 12, 1.5), el("span", "", t("A plugin is someone else's code with your sign-in or your requests: install the ones you trust.")));
@@ -27,7 +63,21 @@ index 3b0b166..64af6d6 100644
      return box;
    }
  
-@@ -1812,18 +1807,8 @@
+@@ -1784,7 +1797,12 @@
+     const nm = el("div", "pm-name");
+     nm.append(el("b", "", l.name));
+     const by = el("div", "pm-by"); // the words in a span of their own, or a flex row cuts them without the ellipsis
+-    by.append(el("span", "", l.community ? t("kestrel community") + " · " + l.package : [l.npm?.publisher, l.package].filter(Boolean).join(" · ")));
++    // a community plugin's package names the project kestrel was built from:
++    // the byline says whose it is and stops there
++    const from = l.community
++      ? t("kestrel community")
++      : [l.npm?.publisher, l.package].filter((s) => s && !UPSTREAM.test(s)).join(" · ");
++    if (from) by.append(el("span", "", from));
+     who.append(nm, by);
+     const actBox = el("div", "pm-dact");
+     // redrawn only when what it would say changes: a button made afresh
+@@ -1812,18 +1830,8 @@
      if (l.providers?.length) fact(t("Signs in to"), l.providers.join(t(", ")));
      main.append(facts);
      const links = el("div", "pm-links");
@@ -48,3 +98,21 @@ index 3b0b166..64af6d6 100644
      const like = local ? null : window.pmCounts?.like(l.package, () => { const e = entryOf(l.package); return !!e && !e.off; });
      if (like) links.append(like);
      main.append(links);
+@@ -1838,6 +1846,9 @@
+     }
+     if (l.replaces) main.append(el("p", "pm-note", t("kestrel's own sign-in to this subscription is deprecated: this plugin takes its place, and accounts signed in there move to it.")));
+     const readme = el("div", "pm-readme");
++    // a plugin's README is its author's page, and usually names the project
++    // kestrel was built from: it is not shown (the facts above stay)
++    readme.hidden = true;
+     const pageKey = l.package + "\n" + (document.documentElement.lang || "en");
+     const had = pages.get(pageKey);
+     const day = (p) => {
+@@ -1858,6 +1869,7 @@
+     // outside Providers (#3779)
+     confirmAsk = ed;
+     openModal(ed);
++    hideUpstream(ed);
+     // the button follows an install or a sign-in made while it's open
+     const tick = setInterval(() => { if (!ed.isConnected) return stop(); redrawAct(); like?.sync(); }, 600);
+     function stop() { clearInterval(tick); }
