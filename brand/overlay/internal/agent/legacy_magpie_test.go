@@ -83,7 +83,7 @@ func TestRenameFormer(t *testing.T) {
 	if got := read(".pi/agent/models.json"); strings.Contains(got, `"magpie"`) || !strings.Contains(got, `"kestrel"`) {
 		t.Fatalf("pi models:\n%s", got)
 	}
-	if got := read(".claude/settings.json"); strings.Contains(got, `"magpie"`) || !strings.Contains(got, `"ANTHROPIC_AUTH_TOKEN": "kestrel"`) || !strings.Contains(got, `"theme": "dark"`) {
+	if got := read(".claude/settings.json"); strings.Contains(got, `"magpie"`) || !strings.Contains(got, `"ANTHROPIC_AUTH_TOKEN": "kestrel"`) || !strings.Contains(got, `"ANTHROPIC_BASE_URL"`) || !strings.Contains(got, `"theme": "dark"`) {
 		t.Fatalf("claude:\n%s", got)
 	}
 	if got := read(".config/crush/crush.json"); !strings.Contains(got, `"magpie"`) || !strings.Contains(got, "api.example.net") {
@@ -115,5 +115,15 @@ func TestRenameFormer(t *testing.T) {
 		if read(rel) != b {
 			t.Fatalf("%s changed on the second run", rel)
 		}
+	}
+
+	// a Codex config TOML kestrel cannot parse is left alone — and so is the
+	// model list it names, not deleted from under it
+	write(".codex/config.toml", "model = \"magpie/x\"\nmodel_provider = \"magpie\"\nmodel_catalog_json = \"magpie-models.json\"\n\n[model_providers.magpie]\nname = \"magpie\"\nbase_url = \"http://127.0.0.1:3425/v1\"\n\n[projects.\"C:\\work\"]\ntrust_level = \"trusted\"\n")
+	write(".codex/magpie-models.json", `{"models":[]}`)
+	os.Remove(filepath.Join(home, ".codex", "config.toml"+formerBackup))
+	RenameFormer()
+	if _, err := os.Stat(filepath.Join(home, ".codex", "magpie-models.json")); err != nil {
+		t.Fatal("the model list of a config kestrel cannot parse was deleted")
 	}
 }
